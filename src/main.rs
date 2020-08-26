@@ -1,3 +1,53 @@
-fn main() {
-    println!("Hello, world!");
+use std::sync::Arc;
+
+use hyper::{
+    service::{make_service_fn, service_fn},
+    Body, Method, Response, Server, StatusCode,
+};
+use juniper::{
+    tests::fixtures::starwars::{model::Database, schema::Query},
+    EmptyMutation, EmptySubscription, RootNode,
+};
+
+#[tokio::main]
+async fn main() {
+    let addr = ([127, 0, 0, 1], 3000).into();
+
+    let db = Arc::new(Database::new());
+    let root_node = Arc::new(RootNode::new(
+        Query,
+        EmptyMutation::<Database>::new(),
+        EmptySubscription::<Database>::new(),
+    ));
+
+    let new_service = make_service_fn(move |_| {
+        let root_node = root_node.clone();
+        let ctx = db.clone();
+
+        async {
+            Ok::<_, hyper::Error>(service_fn(move |req| {
+                let root_node = root_node.clone();
+                let ctx = ctx.clone();
+                async {
+                    match (req.method(), req.uri().path()) {
+                        (&Method::GET, "/") => juniper_hyper::graphiql("/graphql", None).await,
+                        (&Method::GET, "/graphql") | (&Method::POST, "/graphql") => {
+                            juniper_hyper::graphql(root_node, ctx, req).await
+                        }
+                        _ => Ok(Response::builder()
+                            .status(StatusCode::NOT_FOUND)
+                            .body(Body::empty())
+                            .unwrap()),
+                    }
+                }
+            }))
+        }
+    });
+
+    let server = Server::bind(&addr).serve(new_service);
+    println!("Listening on http://{}", addr);
+
+    if let Err(e) = server.await {
+        eprintln!("server error: {}", e)
+    }
 }
