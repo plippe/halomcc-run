@@ -1,0 +1,59 @@
+game_id, id, name, par_time
+1, 1, Winter Contingency, 15
+1, 1, ONI Sword Base, 10
+1, 1, Nightfall, 10
+1, 1, Tip of The Spear, 15
+1, 1, Long Night of Solace, 25
+1, 1, Exodus, 20
+1, 1, New Alexandria, 20
+1, 1, The Package, 20
+1, 1, The Pillar of Autumn, 15
+1, 1, Lone Wolf, 15
+2, 1, Pillar of Autumn, 15
+2, 2, Halo, 20
+2, 3, Truth and Reconciliation, 20
+2, 4, Silent Cartographer, 15
+2, 5, Assault on the Control Room, 15
+2, 6, 343 Guilty Spark, 15
+2, 7, The Library, 25
+2, 8, Two Betrayals, 20
+2, 9, Keyes, 15
+2, 10, The Maw, 15
+3, 1, Cairo Station, 15
+3, 2, Outskirts, 15
+3, 3, Metropolis, 15
+3, 4, The Arbiter, 15
+3, 5, The Oracle, 25
+3, 6, Delta Halo, 15
+3, 7, Regret, 15
+3, 8, Sacred Icon, 15
+3, 9, Quarantine Zone, 15
+3, 10, Gravemind, 20
+3, 11, Uprising, 15
+3, 12, High Charity, 15
+3, 13, The Great Journey, 15
+4, 1, Sierra 117, 15
+4, 2, Crow’s Nest, 20
+4, 3, Tvaso Highway, 20
+4, 4, The Storm, 15
+4, 5, Floodgate, 15
+4, 6, The Ark, 20
+4, 7, The Covenant, 20
+4, 8, Cortana, 15
+4, 9, Halo, 20
+5, 1, Tayari Plaza, 3
+5, 2, Uplift Reserve, 4
+5, 3, Kizingo Boulevard, 9
+5, 4, ONI Alpha Site, 13
+5, 5, NMPD HQ, 10
+5, 6, Kikowani Station, 10
+5, 7, Data Hive, 16
+5, 8, Coastal Highway, 25
+6, 1, Dawn, 15
+6, 2, Requiem, 15
+6, 3, Forerunner, 20
+6, 4, Infinity, 25
+6, 5, Reclaimer, 20
+6, 6, Shutdown, 20
+6, 7, Composer, 20
+6, 8, Midnight, 25

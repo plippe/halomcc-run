@@ -11,3 +11,5 @@ hyper = "0.13.7"
 tokio = { version = "0.2", features = ["full"] }
 juniper = { git = "https://github.com/graphql-rust/juniper.git", features = ["expose-test-schema"] }
 juniper_hyper = { git = "https://github.com/graphql-rust/juniper.git" }
+csv = "1.1"
+serde = { version = "1.0.115", features = ["derive"] }
