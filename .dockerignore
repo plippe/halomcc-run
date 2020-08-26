@@ -4,4 +4,6 @@
 /.git
 .gitignore
 
+/.gcloud
+
 /target
