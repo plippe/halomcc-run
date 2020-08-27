@@ -4,7 +4,7 @@ use hyper::{
     service::{make_service_fn, service_fn},
     Body, Method, Response, Server, StatusCode,
 };
-use juniper::{EmptyMutation, EmptySubscription, FieldResult, GraphQLObject, RootNode};
+use juniper::{graphql_object, EmptyMutation, EmptySubscription, FieldResult, RootNode};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 
@@ -16,31 +16,65 @@ fn csv<A: DeserializeOwned>(path: &str) -> Vec<A> {
         .unwrap_or_else(|err| panic!("Failed parsing CSV file: {}, {}", path, err))
 }
 
-#[derive(Deserialize, GraphQLObject)]
+#[derive(Deserialize, Clone)]
 struct Level {
-    game_id: String,
+    game_id: i32,
     id: i32,
     name: String,
     par_time: i32,
 }
 
-struct LevelsDao;
-impl LevelsDao {
-    fn all() -> Vec<Level> {
-        csv::<Level>("resources/levels.csv")
+#[graphql_object(Context = Context)]
+impl Level {
+    fn game_id(&self) -> i32 {
+        self.game_id
+    }
+
+    fn id(&self) -> i32 {
+        self.id
+    }
+
+    fn name(&self) -> &str {
+        self.name.as_str()
+    }
+
+    fn par_time(&self) -> i32 {
+        self.par_time
+    }
+
+    fn game(&self, context: &Context) -> Game {
+        context
+            .games
+            .clone()
+            .into_iter()
+            .find(|it| it.id == self.game_id)
+            .unwrap()
     }
 }
 
-#[derive(Deserialize, GraphQLObject)]
+#[derive(Deserialize, Clone)]
 struct Game {
     id: i32,
     name: String,
 }
 
-struct GamesDao;
-impl GamesDao {
-    fn all() -> Vec<Game> {
-        csv::<Game>("resources/games.csv")
+#[graphql_object(Context = Context)]
+impl Game {
+    fn id(&self) -> i32 {
+        self.id
+    }
+
+    fn name(&self) -> &str {
+        self.name.as_str()
+    }
+
+    fn levels(&self, context: &Context) -> Vec<Level> {
+        context
+            .levels
+            .clone()
+            .into_iter()
+            .filter(|it| it.game_id == self.id)
+            .collect()
     }
 }
 
