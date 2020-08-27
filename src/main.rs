@@ -44,19 +44,26 @@ impl GamesDao {
     }
 }
 
-struct Context;
+struct Context {
+    games: Vec<Game>,
+    levels: Vec<Level>,
+}
 impl juniper::Context for Context {}
 
 struct Query;
 
-#[juniper::graphql_object(Context = Context)]
+#[graphql_object(Context = Context)]
 impl Query {
-    fn games(_context: &Context) -> FieldResult<Vec<Game>> {
-        Ok(GamesDao::all())
+    fn games(context: &Context) -> FieldResult<Vec<Game>> {
+        Ok(context.games.clone())
     }
 
-    fn levels(_context: &Context) -> FieldResult<Vec<Level>> {
-        Ok(LevelsDao::all())
+    fn game(context: &Context, id: i32) -> FieldResult<Option<Game>> {
+        Ok(context.games.clone().into_iter().find(|it| it.id == id))
+    }
+
+    fn levels(context: &Context) -> FieldResult<Vec<Level>> {
+        Ok(context.levels.clone())
     }
 }
 
@@ -68,7 +75,11 @@ async fn main() {
         .unwrap_or(3000);
     let addr = (ip, port).into();
 
-    let ctx = Arc::new(Context {});
+    let ctx = Arc::new(Context {
+        games: csv::<Game>("resources/games.csv"),
+        levels: csv::<Level>("resources/levels.csv"),
+    });
+
     let root_node = Arc::new(RootNode::new(
         Query,
         EmptyMutation::<Context>::new(),
