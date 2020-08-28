@@ -1,6 +1,7 @@
 mod games;
 mod graphql;
 mod levels;
+mod service_records;
 mod utils;
 
 use hyper::{
