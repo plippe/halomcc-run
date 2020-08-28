@@ -18,7 +18,7 @@ impl Level {
         self.name.as_str()
     }
 
-    fn par_time(&self) -> i32 {
+    fn par_time(&self) -> Option<i32> {
         self.par_time
     }
 

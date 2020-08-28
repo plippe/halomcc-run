@@ -5,5 +5,5 @@ pub struct Level {
     pub game_id: i32,
     pub id: i32,
     pub name: String,
-    pub par_time: i32,
+    pub par_time: Option<i32>,
 }
