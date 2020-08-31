@@ -1,4 +1,4 @@
-FROM rust:1.45-alpine3.12 as server
+FROM rust:1.46-alpine3.12 as server
 
 RUN apk add --no-cache musl-dev
 
