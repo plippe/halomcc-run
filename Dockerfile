@@ -1,6 +1,6 @@
 FROM rust:1.46-alpine3.12 as server
 
-RUN apk add --no-cache musl-dev
+RUN apk add --no-cache musl-dev openssl-dev
 
 COPY . /opt/repository
 WORKDIR /opt/repository
