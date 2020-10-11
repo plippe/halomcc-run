@@ -1,5 +1,7 @@
+mod error;
 mod games;
 mod graphql;
+mod halo_waypoint;
 mod levels;
 mod service_records;
 mod utils;
