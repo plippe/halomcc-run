@@ -19,7 +19,7 @@ pub enum Error {
 impl From<hyper::Error> for Error {
     fn from(err: hyper::Error) -> Self {
         Error::Hyper {
-            msg: format!("{:?}", err).to_string(),
+            msg: format!("{:?}", err),
         }
     }
 }

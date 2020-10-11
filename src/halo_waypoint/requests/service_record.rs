@@ -7,7 +7,7 @@ use scraper::{ElementRef, Html, Selector};
 use std::convert::TryFrom;
 use std::result::Result;
 use std::str::FromStr;
-use time::{time, Time};
+use time::Time;
 
 use crate::error::Error;
 use crate::halo_waypoint::models::*;
@@ -242,6 +242,7 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
 mod get_service_record_response_test {
     use super::*;
     use std::fs;
+    use time::time;
 
     #[test]
     fn try_from_string() {
