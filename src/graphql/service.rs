@@ -15,7 +15,7 @@ pub struct Service {
 impl Service {
     pub fn new() -> Service {
         Service {
-            context: Arc::new(Context::new()),
+            context: Arc::new(Context::default()),
             root_node: Arc::new(RootNode::new(
                 Query,
                 EmptyMutation::<Context>::new(),

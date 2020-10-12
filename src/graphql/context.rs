@@ -8,12 +8,12 @@ pub struct Context {
     pub service_records_doa: ServiceRecordsDao,
 }
 
-impl Context {
-    pub fn new() -> Context {
+impl Default for Context {
+    fn default() -> Self {
         Context {
-            games_dao: GamesDao::new(),
-            missions_dao: MissionsDao::new(),
-            service_records_doa: ServiceRecordsDao::new(),
+            games_dao: GamesDao::default(),
+            missions_dao: MissionsDao::default(),
+            service_records_doa: ServiceRecordsDao::default(),
         }
     }
 }
