@@ -1,5 +1,7 @@
 use async_trait::async_trait;
+use http::header::{HeaderValue, COOKIE};
 use http::{Request, StatusCode};
+use std::env;
 use std::str::FromStr;
 
 use crate::chainable::Chainable;
@@ -24,18 +26,27 @@ trait Client: Sync {
 }
 
 #[derive(Clone)]
-struct HyperClient {
+pub struct HyperClient {
     client: hyper::client::Client<
         hyper_tls::HttpsConnector<hyper::client::HttpConnector>,
         hyper::body::Body,
     >,
+    auth_header: HeaderValue,
 }
 
 impl Default for HyperClient {
     fn default() -> Self {
         let https = hyper_tls::HttpsConnector::new();
         let client = hyper::Client::builder().build(https);
-        HyperClient { client }
+        let auth_header = env::var("HALO_WAYPOINT_AUTH")
+            .expect("Environment variable not found: HALO_WAYPOINT_AUTH")
+            .pipe(|auth| format!("Auth={}", auth).parse())
+            .expect("Invalid header value: HALO_WAYPOINT_AUTH");
+
+        HyperClient {
+            client,
+            auth_header,
+        }
     }
 }
 
@@ -46,7 +57,10 @@ impl Client for HyperClient {
         Req: Into<Request<hyper::body::Body>> + Send,
         Res: FromStr<Err = Error>,
     {
-        let res = self.client.request(req.into()).await?;
+        let mut req = req.into();
+        req.headers_mut().append(COOKIE, self.auth_header.clone());
+
+        let res = self.client.request(req).await?;
 
         let status = res.status();
 
@@ -76,7 +90,6 @@ mod hyper_client_tests {
     #[ignore]
     async fn get_products_page() {
         let req = GetServiceRecordRequest::new(
-            "".to_string(),
             "John117".to_string(),
             Game::HaloCombatEvolved,
             CampaignMode::Solo,

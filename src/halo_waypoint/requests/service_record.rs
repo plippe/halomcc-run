@@ -1,4 +1,3 @@
-use http::header::COOKIE;
 use http::method::Method;
 use http::uri::{Builder, PathAndQuery, Scheme, Uri};
 use http::Request;
@@ -16,21 +15,14 @@ use crate::halo_waypoint::models::difficulty::Difficulty;
 use crate::halo_waypoint::models::game::Game;
 
 pub struct GetServiceRecordRequest {
-    authentication: String,
     player: String,
     game: Game,
     campaign_mode: CampaignMode,
 }
 
 impl GetServiceRecordRequest {
-    pub fn new(
-        authentication: String,
-        player: String,
-        game: Game,
-        campaign_mode: CampaignMode,
-    ) -> GetServiceRecordRequest {
+    pub fn new(player: String, game: Game, campaign_mode: CampaignMode) -> GetServiceRecordRequest {
         GetServiceRecordRequest {
-            authentication,
             player,
             game,
             campaign_mode,
@@ -74,7 +66,6 @@ impl From<&GetServiceRecordRequest> for Request<Body> {
             .uri(Uri::from(req))
             .header("user-agent", "halomcc.run/0.1")
             .header("X-Requested-With", "XMLHttpRequest")
-            .header(COOKIE, format!("Auth={}", req.authentication))
             .body(Body::empty())
             .unwrap()
     }
@@ -87,7 +78,6 @@ mod get_service_record_request_test {
     #[test]
     fn into_uri() {
         let req = GetServiceRecordRequest::new(
-            "".to_string(),
             "John117".to_string(),
             Game::HaloCombatEvolved,
             CampaignMode::Solo,
