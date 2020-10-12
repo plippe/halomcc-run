@@ -5,10 +5,6 @@ use crate::games::game::{Game, GameProperties};
 pub struct GamesDao;
 
 impl GamesDao {
-    pub fn new() -> GamesDao {
-        GamesDao
-    }
-
     pub fn all(&self) -> Vec<Game> {
         Game::iter().collect()
     }
@@ -17,5 +13,11 @@ impl GamesDao {
         self.all()
             .into_iter()
             .find(|game| GameProperties::from(game).id() == id)
+    }
+}
+
+impl Default for GamesDao {
+    fn default() -> Self {
+        GamesDao
     }
 }

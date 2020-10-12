@@ -32,7 +32,7 @@ struct HyperClient {
 }
 
 impl Default for HyperClient {
-    fn default() -> HyperClient {
+    fn default() -> Self {
         let https = hyper_tls::HttpsConnector::new();
         let client = hyper::Client::builder().build(https);
         HyperClient { client }
