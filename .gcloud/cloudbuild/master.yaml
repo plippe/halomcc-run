@@ -14,4 +14,4 @@ steps:
     - '--platform=managed'
     - '--region=europe-west1'
 
-timeout: 900s
+timeout: 1800s
