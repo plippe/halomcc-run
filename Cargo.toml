@@ -8,7 +8,6 @@ edition = "2018"
 
 [dependencies]
 async-trait = "0.1.40"
-csv = "1.1"
 http = "0.2.1"
 hyper = "0.13.7"
 hyper-tls = "0.4.3"
