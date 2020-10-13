@@ -11,12 +11,12 @@ pub enum CampaignMode {
 
 impl FromStr for CampaignMode {
     type Err = Error;
-    fn from_str(it: &str) -> Result<Self, Self::Err> {
-        match it {
+    fn from_str(campaign_mode: &str) -> Result<Self, Self::Err> {
+        match campaign_mode {
             "Solo" => Ok(CampaignMode::Solo),
             "Coop" => Ok(CampaignMode::Coop),
-            it => Err(Error::HaloWaypointUnknownCampaignMode {
-                campaign_mode: it.to_string(),
+            campaign_mode => Err(Error::HaloWaypointUnknownCampaignMode {
+                campaign_mode: campaign_mode.to_string(),
             }),
         }
     }

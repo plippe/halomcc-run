@@ -1,7 +1,4 @@
-mod context;
+pub mod context;
 mod query;
-mod service;
-
-pub use self::context::Context;
-pub use self::query::Query;
-pub use self::service::Service;
+pub mod service;
+pub mod time;

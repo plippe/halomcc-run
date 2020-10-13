@@ -1,7 +1,7 @@
 use juniper::{graphql_object, FieldResult};
 
-use crate::games::Game;
-use crate::graphql::Context;
+use crate::games::game::Game;
+use crate::graphql::context::Context;
 
 pub struct Query;
 

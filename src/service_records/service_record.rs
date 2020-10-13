@@ -1,9 +1,40 @@
-use serde::Deserialize;
+use time::Time;
 
-#[derive(Deserialize, Clone)]
 pub struct ServiceRecord {
-    pub player: String,
-    pub game_id: i32,
-    pub level_id: i32,
-    pub best_time: i32,
+    player: String,
+    game_id: i32,
+    mission_id: i32,
+    best_time: Option<Time>,
+}
+
+impl ServiceRecord {
+    pub fn new(
+        player: String,
+        game_id: i32,
+        mission_id: i32,
+        best_time: Option<Time>,
+    ) -> ServiceRecord {
+        ServiceRecord {
+            player,
+            game_id,
+            mission_id,
+            best_time,
+        }
+    }
+
+    pub fn player(&self) -> String {
+        self.player.clone()
+    }
+
+    pub fn game_id(&self) -> i32 {
+        self.game_id
+    }
+
+    pub fn mission_id(&self) -> i32 {
+        self.mission_id
+    }
+
+    pub fn best_time(&self) -> Option<Time> {
+        self.best_time
+    }
 }

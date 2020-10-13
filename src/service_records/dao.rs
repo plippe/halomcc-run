@@ -1,26 +1,18 @@
-use crate::service_records::ServiceRecord;
-use crate::utils::csv;
+use crate::service_records::service_record::ServiceRecord;
 
-pub struct ServiceRecordsDao {
-    cache: Vec<ServiceRecord>,
-}
+pub struct ServiceRecordsDao;
 
 impl ServiceRecordsDao {
     pub fn new() -> ServiceRecordsDao {
-        ServiceRecordsDao {
-            cache: csv::<ServiceRecord>("resources/service_records.csv"),
-        }
+        ServiceRecordsDao
     }
 
-    pub fn find_by_player_game_id_and_level_id(
+    pub fn find_by_player_game_id_and_mission_id(
         &self,
         player: String,
         game_id: i32,
-        level_id: i32,
+        mission_id: i32,
     ) -> Option<ServiceRecord> {
-        self.cache
-            .clone()
-            .into_iter()
-            .find(|it| it.player == player && it.game_id == game_id && it.level_id == level_id)
+        Some(ServiceRecord::new(player, game_id, mission_id, None))
     }
 }

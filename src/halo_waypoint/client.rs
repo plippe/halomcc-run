@@ -2,9 +2,11 @@ use async_trait::async_trait;
 use http::{Request, StatusCode};
 use std::str::FromStr;
 
+use crate::chainable::Chainable;
 use crate::error::Error;
-use crate::halo_waypoint::requests::{GetServiceRecordRequest, GetServiceRecordResponse};
-use crate::utils::Chainable;
+use crate::halo_waypoint::requests::service_record::{
+    GetServiceRecordRequest, GetServiceRecordResponse,
+};
 
 #[async_trait]
 trait Client: Sync {
@@ -67,8 +69,8 @@ impl Client for HyperClient {
 #[cfg(test)]
 mod hyper_client_tests {
     use super::*;
-    use crate::halo_waypoint::models::{CampaignMode, Game};
-    use crate::halo_waypoint::requests::GetServiceRecordRequest;
+    use crate::halo_waypoint::models::campaign_mode::CampaignMode;
+    use crate::halo_waypoint::models::game::Game;
 
     #[tokio::test]
     #[ignore]

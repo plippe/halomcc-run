@@ -1,10 +1,10 @@
-use crate::games::GamesDao;
-use crate::levels::LevelsDao;
-use crate::service_records::ServiceRecordsDao;
+use crate::games::dao::GamesDao;
+use crate::missions::dao::MissionsDao;
+use crate::service_records::dao::ServiceRecordsDao;
 
 pub struct Context {
     pub games_dao: GamesDao,
-    pub levels_dao: LevelsDao,
+    pub missions_dao: MissionsDao,
     pub service_records_doa: ServiceRecordsDao,
 }
 
@@ -12,7 +12,7 @@ impl Context {
     pub fn new() -> Context {
         Context {
             games_dao: GamesDao::new(),
-            levels_dao: LevelsDao::new(),
+            missions_dao: MissionsDao::new(),
             service_records_doa: ServiceRecordsDao::new(),
         }
     }
