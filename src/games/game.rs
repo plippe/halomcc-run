@@ -1,4 +1,6 @@
-#[derive(Clone, Debug, Copy)]
+use strum_macros::EnumIter;
+
+#[derive(EnumIter)]
 pub enum Game {
     Halo,
     Halo2,
@@ -6,19 +8,6 @@ pub enum Game {
     Halo3Odst,
     HaloReach,
     Halo4,
-}
-
-impl Game {
-    pub fn all() -> Vec<Game> {
-        vec![
-            Game::Halo,
-            Game::Halo2,
-            Game::Halo3,
-            Game::Halo3Odst,
-            Game::HaloReach,
-            Game::Halo4,
-        ]
-    }
 }
 
 pub struct GameProperties {

@@ -1,3 +1,4 @@
+use strum::IntoEnumIterator;
 use time::Time;
 
 mod halo;
@@ -7,7 +8,6 @@ mod halo_3_odst;
 mod halo_4;
 mod halo_reach;
 
-use crate::chainable::Chainable;
 use crate::games::game::{Game, GameProperties};
 
 #[derive(Clone)]
@@ -21,20 +21,21 @@ pub enum Mission {
 }
 
 impl Mission {
-    pub fn all() -> Vec<Self> {
-        fn into<A: Into<Mission>>(missions: Vec<A>) -> Vec<Mission> {
-            missions.into_iter().map(Into::into).collect()
+    pub fn iter() -> impl Iterator<Item = Mission> {
+        fn missions<Enum: IntoEnumIterator + Into<Mission>>() -> Vec<Mission> {
+            Enum::iter().map(Into::into).collect()
         }
 
         [
-            halo::HaloMission::all().pipe(into),
-            halo_2::Halo2Mission::all().pipe(into),
-            halo_3::Halo3Mission::all().pipe(into),
-            halo_3_odst::Halo3OdstMission::all().pipe(into),
-            halo_reach::HaloReachMission::all().pipe(into),
-            halo_4::Halo4Mission::all().pipe(into),
+            missions::<halo::HaloMission>(),
+            missions::<halo_2::Halo2Mission>(),
+            missions::<halo_3::Halo3Mission>(),
+            missions::<halo_3_odst::Halo3OdstMission>(),
+            missions::<halo_reach::HaloReachMission>(),
+            missions::<halo_4::Halo4Mission>(),
         ]
         .concat()
+        .into_iter()
     }
 }
 
