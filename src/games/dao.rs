@@ -1,22 +1,19 @@
-use crate::games::Game;
-use crate::utils::csv;
+use crate::games::game::{Game, GameProperties};
 
-pub struct GamesDao {
-    cache: Vec<Game>,
-}
+pub struct GamesDao;
 
 impl GamesDao {
     pub fn new() -> GamesDao {
-        GamesDao {
-            cache: csv::<Game>("resources/games.csv"),
-        }
+        GamesDao
     }
 
     pub fn all(&self) -> Vec<Game> {
-        self.cache.clone()
+        Game::all()
     }
 
     pub fn find_by_id(&self, id: i32) -> Option<Game> {
-        self.cache.clone().into_iter().find(|it| it.id == id)
+        Game::all()
+            .into_iter()
+            .find(|game| GameProperties::from(game).id() == id)
     }
 }

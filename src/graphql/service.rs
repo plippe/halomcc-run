@@ -2,7 +2,8 @@ use hyper::{Body, Request, Response};
 use juniper::{EmptyMutation, EmptySubscription, RootNode};
 use std::sync::Arc;
 
-use crate::graphql::{Context, Query};
+use crate::graphql::context::Context;
+use crate::graphql::query::Query;
 
 #[derive(Clone)]
 pub struct Service {

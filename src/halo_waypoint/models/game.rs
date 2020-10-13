@@ -15,16 +15,16 @@ pub enum Game {
 
 impl FromStr for Game {
     type Err = Error;
-    fn from_str(it: &str) -> Result<Self, Self::Err> {
-        match it {
+    fn from_str(game: &str) -> Result<Self, Self::Err> {
+        match game {
             "HaloReach" => Ok(Game::HaloReach),
             "HaloCombatEvolved" => Ok(Game::HaloCombatEvolved),
             "Halo2" => Ok(Game::Halo2),
             "Halo3" => Ok(Game::Halo3),
             "Halo3Odst" => Ok(Game::Halo3Odst),
             "Halo4" => Ok(Game::Halo4),
-            it => Err(Error::HaloWaypointUnknownGame {
-                game: it.to_string(),
+            game => Err(Error::HaloWaypointUnknownGame {
+                game: game.to_string(),
             }),
         }
     }

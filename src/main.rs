@@ -1,10 +1,10 @@
+mod chainable;
 mod error;
 mod games;
 mod graphql;
 mod halo_waypoint;
-mod levels;
+mod missions;
 mod service_records;
-mod utils;
 
 use hyper::{
     service::{make_service_fn, service_fn},
@@ -12,7 +12,7 @@ use hyper::{
 };
 use std::net::SocketAddr;
 
-use crate::graphql::Service;
+use crate::graphql::service::Service;
 
 fn addr() -> SocketAddr {
     let ip = [0, 0, 0, 0];

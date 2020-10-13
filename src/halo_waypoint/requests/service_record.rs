@@ -9,9 +9,11 @@ use std::result::Result;
 use std::str::FromStr;
 use time::Time;
 
+use crate::chainable::Chainable;
 use crate::error::Error;
-use crate::halo_waypoint::models::*;
-use crate::utils::Chainable;
+use crate::halo_waypoint::models::campaign_mode::CampaignMode;
+use crate::halo_waypoint::models::difficulty::Difficulty;
+use crate::halo_waypoint::models::game::Game;
 
 pub struct GetServiceRecordRequest {
     authentication: String,
@@ -37,15 +39,15 @@ impl GetServiceRecordRequest {
 }
 
 impl From<&GetServiceRecordRequest> for Uri {
-    fn from(it: &GetServiceRecordRequest) -> Uri {
+    fn from(req: &GetServiceRecordRequest) -> Uri {
         let path_and_query = format!(
             "/{}/games/{}/{}/service-records/players/{}/missions?game={}&campaignMode={}",
             "en-us",                            // local
             "halo-the-master-chief-collection", // game
             "xbox-one",                         // platform
-            it.player,
-            it.game.to_string(),
-            it.campaign_mode.to_string(),
+            req.player,
+            req.game.to_string(),
+            req.campaign_mode.to_string(),
         )
         .pipe(PathAndQuery::from_maybe_shared)
         .unwrap();
@@ -66,13 +68,13 @@ impl From<&GetServiceRecordRequest> for Method {
 }
 
 impl From<&GetServiceRecordRequest> for Request<Body> {
-    fn from(it: &GetServiceRecordRequest) -> Request<Body> {
+    fn from(req: &GetServiceRecordRequest) -> Request<Body> {
         Request::builder()
-            .method(Method::from(it))
-            .uri(Uri::from(it))
+            .method(Method::from(req))
+            .uri(Uri::from(req))
             .header("user-agent", "halomcc.run/0.1")
             .header("X-Requested-With", "XMLHttpRequest")
-            .header(COOKIE, format!("Auth={}", it.authentication))
+            .header(COOKIE, format!("Auth={}", req.authentication))
             .body(Body::empty())
             .unwrap()
     }
@@ -116,18 +118,19 @@ impl FromStr for GetServiceRecordResponse {
 
 impl TryFrom<Html> for GetServiceRecordResponse {
     type Error = Error;
-    fn try_from(it: Html) -> Result<Self, Self::Error> {
-        it.root_element().pipe(GetServiceRecordResponse::try_from)
+    fn try_from(html: Html) -> Result<Self, Self::Error> {
+        html.root_element().pipe(GetServiceRecordResponse::try_from)
     }
 }
 
 impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
     type Error = Error;
-    fn try_from(it: ElementRef) -> Result<Self, Self::Error> {
+    fn try_from(element: ElementRef) -> Result<Self, Self::Error> {
         let game = Selector::parse("[data-game-id]")
             .unwrap()
             .pipe(|selector| {
-                it.select(&selector)
+                element
+                    .select(&selector)
                     .next()
                     .and_then(|element| element.value().attr("data-game-id"))
                     .ok_or(Error::HaloWaypointMissingGame)
@@ -137,7 +140,8 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
         let campaign_mode = Selector::parse("[data-mode-id]")
             .unwrap()
             .pipe(|selector| {
-                it.select(&selector)
+                element
+                    .select(&selector)
                     .next()
                     .and_then(|element| element.value().attr("data-mode-id"))
                     .ok_or(Error::HaloWaypointMissingCampaignMode)
@@ -147,7 +151,8 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
         let missions = Selector::parse("[data-mission-id]")
             .unwrap()
             .pipe(|selector| {
-                it.select(&selector)
+                element
+                    .select(&selector)
                     .map(GetServiceRecordResponseMission::try_from)
                     .collect::<Result<Vec<GetServiceRecordResponseMission>, Error>>()
             });
@@ -179,8 +184,8 @@ pub struct GetServiceRecordResponseMission {
 
 impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
     type Error = Error;
-    fn try_from(it: ElementRef) -> Result<Self, Self::Error> {
-        let id = it
+    fn try_from(element: ElementRef) -> Result<Self, Self::Error> {
+        let id = element
             .value()
             .attr("data-mission-id")
             .ok_or(Error::HaloWaypointMissingMissionId)
@@ -195,7 +200,8 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
         let difficulty = Selector::parse(".skull .spritesheet")
             .unwrap()
             .pipe(|selector| {
-                it.select(&selector)
+                element
+                    .select(&selector)
                     .next()
                     .and_then(|element| element.value().attr("title"))
             })
@@ -209,7 +215,8 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
             Selector::parse(".best-time")
                 .unwrap()
                 .pipe(|selector| {
-                    it.select(&selector)
+                    element
+                        .select(&selector)
                         .next()
                         .ok_or(Error::HaloWaypointMissingTime)
                 })

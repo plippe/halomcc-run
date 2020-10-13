@@ -1,3 +1,1 @@
-mod service_record;
-
-pub use self::service_record::{GetServiceRecordRequest, GetServiceRecordResponse};
+pub mod service_record;
