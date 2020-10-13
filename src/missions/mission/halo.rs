@@ -1,9 +1,10 @@
+use strum_macros::EnumIter;
 use time::time;
 
 use crate::games::game::Game;
 use crate::missions::mission::{Mission, MissionProperties};
 
-#[derive(Clone)]
+#[derive(Clone, EnumIter)]
 pub enum HaloMission {
     PillarOfAutumn,
     Halo,
@@ -15,23 +16,6 @@ pub enum HaloMission {
     TwoBetrayals,
     Keyes,
     TheMaw,
-}
-
-impl HaloMission {
-    pub fn all() -> Vec<Self> {
-        vec![
-            HaloMission::PillarOfAutumn,
-            HaloMission::Halo,
-            HaloMission::TruthAndReconciliation,
-            HaloMission::SilentCartographer,
-            HaloMission::AssaultOnTheControlRoom,
-            HaloMission::ThreeFourThreeGuiltySpark,
-            HaloMission::TheLibrary,
-            HaloMission::TwoBetrayals,
-            HaloMission::Keyes,
-            HaloMission::TheMaw,
-        ]
-    }
 }
 
 impl From<HaloMission> for Mission {

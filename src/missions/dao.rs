@@ -8,8 +8,7 @@ impl MissionsDao {
     }
 
     pub fn all_by_game_id(&self, game_id: i32) -> Vec<Mission> {
-        Mission::all()
-            .into_iter()
+        Mission::iter()
             .filter(|mission| MissionProperties::from(mission).game_id() == game_id)
             .collect()
     }
