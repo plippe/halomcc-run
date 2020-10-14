@@ -99,6 +99,20 @@ pub struct GetServiceRecordResponse {
     missions: Vec<GetServiceRecordResponseMission>,
 }
 
+impl GetServiceRecordResponse {
+    pub fn game(&self) -> Game {
+        self.game
+    }
+
+    pub fn campaign_mode(&self) -> CampaignMode {
+        self.campaign_mode
+    }
+
+    pub fn missions(&self) -> Vec<GetServiceRecordResponseMission> {
+        self.missions.clone()
+    }
+}
+
 impl FromStr for GetServiceRecordResponse {
     type Err = Error;
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
@@ -165,11 +179,25 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct GetServiceRecordResponseMission {
     id: u8,
     difficulty: Option<Difficulty>,
     time: Option<Time>,
+}
+
+impl GetServiceRecordResponseMission {
+    pub fn id(&self) -> u8 {
+        self.id
+    }
+
+    pub fn difficulty(&self) -> Option<Difficulty> {
+        self.difficulty
+    }
+
+    pub fn time(&self) -> Option<Time> {
+        self.time
+    }
 }
 
 impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
