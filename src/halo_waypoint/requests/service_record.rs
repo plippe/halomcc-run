@@ -104,9 +104,9 @@ impl GetServiceRecordResponse {
         self.game
     }
 
-    pub fn campaign_mode(&self) -> CampaignMode {
-        self.campaign_mode
-    }
+    // pub fn campaign_mode(&self) -> CampaignMode {
+    //     self.campaign_mode
+    // }
 
     pub fn missions(&self) -> Vec<GetServiceRecordResponseMission> {
         self.missions.clone()
@@ -137,7 +137,7 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
                     .select(&selector)
                     .next()
                     .and_then(|element| element.value().attr("data-game-id"))
-                    .ok_or(HaloWaypointError::MissingGame.into())
+                    .ok_or_else(|| HaloWaypointError::MissingGame.into())
             })
             .and_then(Game::from_str);
 
@@ -148,7 +148,7 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
                     .select(&selector)
                     .next()
                     .and_then(|element| element.value().attr("data-mode-id"))
-                    .ok_or(HaloWaypointError::MissingCampaignMode.into())
+                    .ok_or_else(|| HaloWaypointError::MissingCampaignMode.into())
             })
             .and_then(CampaignMode::from_str);
 
@@ -191,9 +191,9 @@ impl GetServiceRecordResponseMission {
         self.id
     }
 
-    pub fn difficulty(&self) -> Option<Difficulty> {
-        self.difficulty
-    }
+    // pub fn difficulty(&self) -> Option<Difficulty> {
+    //     self.difficulty
+    // }
 
     pub fn time(&self) -> Option<Time> {
         self.time
@@ -224,7 +224,7 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
                     .next()
                     .and_then(|element| element.value().attr("title"))
             })
-            .ok_or(HaloWaypointError::MissingDifficulty.into())
+            .ok_or_else(|| HaloWaypointError::MissingDifficulty.into())
             .and_then(|attribute| match attribute {
                 "None" => Ok(None),
                 attribute => attribute.parse().map(Some),
