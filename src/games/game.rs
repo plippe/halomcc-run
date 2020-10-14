@@ -1,6 +1,6 @@
 use strum_macros::EnumIter;
 
-#[derive(EnumIter)]
+#[derive(Debug, EnumIter)]
 pub enum Game {
     Halo,
     Halo2,

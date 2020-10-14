@@ -1,3 +1,3 @@
-mod client;
-mod models;
-mod requests;
+pub mod client;
+pub mod models;
+pub mod requests;

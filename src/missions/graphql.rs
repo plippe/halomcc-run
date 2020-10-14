@@ -22,10 +22,14 @@ impl Mission {
             .map(|par_time| Time::from(par_time).seconds())
     }
 
-    fn service_record_by_player(&self, player: String, context: &Context) -> Option<ServiceRecord> {
-        let properties = MissionProperties::from(self);
+    async fn service_record_by_player(
+        &self,
+        player: String,
+        context: &Context,
+    ) -> Option<ServiceRecord> {
         context
             .service_records_doa
-            .find_by_player_game_id_and_mission_id(player, properties.game_id(), properties.id())
+            .find_by_player_and_mission(player, self)
+            .await
     }
 }

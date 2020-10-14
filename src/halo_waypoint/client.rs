@@ -5,13 +5,13 @@ use std::env;
 use std::str::FromStr;
 
 use crate::chainable::Chainable;
-use crate::error::Error;
+use crate::error::{Error, HaloWaypointError};
 use crate::halo_waypoint::requests::service_record::{
     GetServiceRecordRequest, GetServiceRecordResponse,
 };
 
 #[async_trait]
-trait Client: Sync {
+pub trait Client: Sync {
     async fn request<Req, Res>(&self, req: Req) -> Result<Res, Error>
     where
         Req: Into<Request<hyper::Body>> + Send,

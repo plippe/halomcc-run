@@ -19,8 +19,7 @@ impl ServiceRecord {
     }
 
     // TODO: GraphQL shouldn't require explicit conversions
-    fn best_time_in_seconds(&self) -> Option<i32> {
-        self.best_time()
-            .map(|par_time| Time::from(par_time).seconds())
+    fn time_in_seconds(&self) -> Option<i32> {
+        self.time().map(|time| Time::from(time).seconds())
     }
 }

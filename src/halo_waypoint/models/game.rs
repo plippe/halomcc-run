@@ -4,7 +4,7 @@ use std::str::FromStr;
 use crate::error::{Error, HaloWaypointError};
 use crate::games::game::Game as MyGame;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Game {
     HaloReach,
     HaloCombatEvolved,
@@ -41,6 +41,32 @@ impl ToString for Game {
             Game::Halo3 => "Halo3".to_string(),
             Game::Halo3Odst => "Halo3Odst".to_string(),
             Game::Halo4 => "Halo4".to_string(),
+        }
+    }
+}
+
+impl From<&MyGame> for Game {
+    fn from(game: &MyGame) -> Self {
+        match game {
+            MyGame::Halo => Game::HaloCombatEvolved,
+            MyGame::Halo2 => Game::Halo2,
+            MyGame::Halo3 => Game::Halo3,
+            MyGame::Halo3Odst => Game::Halo3Odst,
+            MyGame::HaloReach => Game::HaloReach,
+            MyGame::Halo4 => Game::Halo4,
+        }
+    }
+}
+
+impl Into<MyGame> for Game {
+    fn into(self) -> MyGame {
+        match self {
+            Game::HaloCombatEvolved => MyGame::Halo,
+            Game::Halo2 => MyGame::Halo2,
+            Game::Halo3 => MyGame::Halo3,
+            Game::Halo3Odst => MyGame::Halo3Odst,
+            Game::HaloReach => MyGame::HaloReach,
+            Game::Halo4 => MyGame::Halo4,
         }
     }
 }

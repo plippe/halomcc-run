@@ -4,21 +4,16 @@ pub struct ServiceRecord {
     player: String,
     game_id: i32,
     mission_id: i32,
-    best_time: Option<Time>,
+    time: Option<Time>,
 }
 
 impl ServiceRecord {
-    pub fn new(
-        player: String,
-        game_id: i32,
-        mission_id: i32,
-        best_time: Option<Time>,
-    ) -> ServiceRecord {
+    pub fn new(player: String, game_id: i32, mission_id: i32, time: Option<Time>) -> ServiceRecord {
         ServiceRecord {
             player,
             game_id,
             mission_id,
-            best_time,
+            time,
         }
     }
 
@@ -34,7 +29,7 @@ impl ServiceRecord {
         self.mission_id
     }
 
-    pub fn best_time(&self) -> Option<Time> {
-        self.best_time
+    pub fn time(&self) -> Option<Time> {
+        self.time
     }
 }
