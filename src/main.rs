@@ -26,10 +26,6 @@ fn addr() -> SocketAddr {
 #[derive(Clone)]
 struct NotFound;
 impl NotFound {
-    fn new() -> NotFound {
-        NotFound {}
-    }
-
     async fn call(&self, _req: Request<Body>) -> Result<Response<Body>, hyper::error::Error> {
         Ok(Response::builder()
             .status(StatusCode::NOT_FOUND)
@@ -38,10 +34,16 @@ impl NotFound {
     }
 }
 
+impl Default for NotFound {
+    fn default() -> NotFound {
+        NotFound
+    }
+}
+
 #[tokio::main]
 async fn main() {
-    let graphql_service = Service::new();
-    let not_found_service = NotFound::new();
+    let graphql_service = Service::default();
+    let not_found_service = NotFound::default();
 
     let new_service = make_service_fn(move |_| {
         let graphql_service = graphql_service.clone();

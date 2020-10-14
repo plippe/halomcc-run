@@ -13,17 +13,6 @@ pub struct Service {
 }
 
 impl Service {
-    pub fn new() -> Service {
-        Service {
-            context: Arc::new(Context::default()),
-            root_node: Arc::new(RootNode::new(
-                Query,
-                EmptyMutation::<Context>::new(),
-                EmptySubscription::<Context>::new(),
-            )),
-        }
-    }
-
     pub async fn graphiql(
         &self,
         _req: Request<Body>,
@@ -33,5 +22,18 @@ impl Service {
 
     pub async fn graphql(&self, req: Request<Body>) -> Result<Response<Body>, hyper::error::Error> {
         juniper_hyper::graphql(self.root_node.clone(), self.context.clone(), req).await
+    }
+}
+
+impl Default for Service {
+    fn default() -> Service {
+        Service {
+            context: Arc::new(Context::default()),
+            root_node: Arc::new(RootNode::new(
+                Query,
+                EmptyMutation::<Context>::new(),
+                EmptySubscription::<Context>::new(),
+            )),
+        }
     }
 }
