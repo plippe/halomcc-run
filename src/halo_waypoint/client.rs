@@ -72,10 +72,11 @@ impl Client for HyperClient {
 
         match status {
             StatusCode::OK => body.parse(),
-            other => Err(Error::HaloWaypointStatus {
+            other => Err(HaloWaypointError::Http {
                 status: other.as_u16(),
                 body,
-            }),
+            }
+            .into()),
         }
     }
 }
