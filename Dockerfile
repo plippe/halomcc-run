@@ -1,8 +1,6 @@
-FROM rust:1.46-alpine3.12 as server
+FROM ekidd/rust-musl-builder:1.47.0 AS builder
 
-RUN apk add --no-cache musl-dev openssl-dev
-
-COPY . /opt/repository
+COPY --chown=rust:rust . /opt/repository
 WORKDIR /opt/repository
 
 RUN cargo build --release
@@ -11,8 +9,7 @@ RUN cargo build --release
 
 FROM alpine:3.12
 
-COPY --from=server /opt/repository/target/release/halomcc-run /opt/bin/server
-COPY ./resources /opt/bin/resources
+COPY --from=builder /opt/repository/target/x86_64-unknown-linux-musl/release/halomcc-run /opt/bin/server
 WORKDIR /opt/bin
 
 ENTRYPOINT PORT=${PORT} /opt/bin/server
