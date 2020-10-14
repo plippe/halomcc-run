@@ -1,7 +1,7 @@
 use std::result::Result;
 use std::str::FromStr;
 
-use crate::error::Error;
+use crate::error::{Error, HaloWaypointError};
 
 #[derive(Debug, PartialEq)]
 pub enum Difficulty {
@@ -19,9 +19,10 @@ impl FromStr for Difficulty {
             "Normal" => Ok(Difficulty::Normal),
             "Heroic" => Ok(Difficulty::Heroic),
             "Legendary" => Ok(Difficulty::Legendary),
-            difficulty => Err(Error::HaloWaypointUnknownDifficulty {
+            difficulty => Err(HaloWaypointError::UnknownDifficulty {
                 difficulty: difficulty.to_string(),
-            }),
+            }
+            .into()),
         }
     }
 }

@@ -1,7 +1,7 @@
 use std::result::Result;
 use std::str::FromStr;
 
-use crate::error::Error;
+use crate::error::{Error, HaloWaypointError};
 
 #[derive(Debug, PartialEq)]
 pub enum CampaignMode {
@@ -15,9 +15,10 @@ impl FromStr for CampaignMode {
         match campaign_mode {
             "Solo" => Ok(CampaignMode::Solo),
             "Coop" => Ok(CampaignMode::Coop),
-            campaign_mode => Err(Error::HaloWaypointUnknownCampaignMode {
+            campaign_mode => Err(HaloWaypointError::UnknownCampaignMode {
                 campaign_mode: campaign_mode.to_string(),
-            }),
+            }
+            .into()),
         }
     }
 }

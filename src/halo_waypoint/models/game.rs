@@ -1,7 +1,8 @@
 use std::result::Result;
 use std::str::FromStr;
 
-use crate::error::Error;
+use crate::error::{Error, HaloWaypointError};
+use crate::games::game::Game as MyGame;
 
 #[derive(Debug, PartialEq)]
 pub enum Game {
@@ -23,9 +24,10 @@ impl FromStr for Game {
             "Halo3" => Ok(Game::Halo3),
             "Halo3Odst" => Ok(Game::Halo3Odst),
             "Halo4" => Ok(Game::Halo4),
-            game => Err(Error::HaloWaypointUnknownGame {
+            game => Err(HaloWaypointError::UnknownGame {
                 game: game.to_string(),
-            }),
+            }
+            .into()),
         }
     }
 }

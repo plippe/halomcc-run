@@ -9,7 +9,7 @@ use std::str::FromStr;
 use time::Time;
 
 use crate::chainable::Chainable;
-use crate::error::Error;
+use crate::error::{Error, HaloWaypointError};
 use crate::halo_waypoint::models::campaign_mode::CampaignMode;
 use crate::halo_waypoint::models::difficulty::Difficulty;
 use crate::halo_waypoint::models::game::Game;
@@ -123,7 +123,7 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
                     .select(&selector)
                     .next()
                     .and_then(|element| element.value().attr("data-game-id"))
-                    .ok_or(Error::HaloWaypointMissingGame)
+                    .ok_or(HaloWaypointError::MissingGame.into())
             })
             .and_then(Game::from_str);
 
@@ -134,7 +134,7 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
                     .select(&selector)
                     .next()
                     .and_then(|element| element.value().attr("data-mode-id"))
-                    .ok_or(Error::HaloWaypointMissingCampaignMode)
+                    .ok_or(HaloWaypointError::MissingCampaignMode.into())
             })
             .and_then(CampaignMode::from_str);
 
@@ -178,14 +178,15 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
         let id = element
             .value()
             .attr("data-mission-id")
-            .ok_or(Error::HaloWaypointMissingMissionId)
+            .ok_or(HaloWaypointError::MissingMissionId)
             .and_then(|attribute| {
                 attribute
                     .parse()
-                    .map_err(|_| Error::HaloWaypointInvalidMissionId {
+                    .map_err(|_| HaloWaypointError::InvalidMissionId {
                         mission_id: attribute.to_string(),
                     })
-            });
+            })
+            .map_err(|err| err.into());
 
         let difficulty = Selector::parse(".skull .spritesheet")
             .unwrap()
@@ -195,7 +196,7 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
                     .next()
                     .and_then(|element| element.value().attr("title"))
             })
-            .ok_or(Error::HaloWaypointMissingDifficulty)
+            .ok_or(HaloWaypointError::MissingDifficulty.into())
             .and_then(|attribute| match attribute {
                 "None" => Ok(None),
                 attribute => attribute.parse().map(Some),
@@ -208,16 +209,17 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
                     element
                         .select(&selector)
                         .next()
-                        .ok_or(Error::HaloWaypointMissingTime)
+                        .ok_or(HaloWaypointError::MissingTime)
                 })
                 .and_then(|element| match element.inner_html().as_str() {
                     "--" => Ok(None),
                     html => Time::parse(html, "%T").map(Some).map_err(|_| {
-                        Error::HaloWaypointInvalidTime {
+                        HaloWaypointError::InvalidTime {
                             time: html.to_string(),
                         }
                     }),
-                });
+                })
+                .map_err(|err| err.into());
 
         match (id, difficulty, time) {
             (Ok(id), Ok(difficulty), Ok(time)) => Ok(GetServiceRecordResponseMission {
