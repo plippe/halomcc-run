@@ -461,7 +461,6 @@ dependencies = [
  "juniper",
  "juniper_hyper",
  "scraper",
- "serde",
  "strum",
  "strum_macros",
  "time 0.2.22",
