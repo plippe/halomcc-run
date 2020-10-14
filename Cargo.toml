@@ -16,6 +16,5 @@ juniper_hyper = { git = "https://github.com/graphql-rust/juniper.git" }
 scraper = "0.12.0"
 strum = "0.19.4"
 strum_macros = "0.19.4"
-serde = { version = "1.0.115", features = ["derive"] }
 time = "0.2.22"
 tokio = { version = "0.2", features = ["full"] }
