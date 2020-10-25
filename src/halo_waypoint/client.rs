@@ -1,27 +1,38 @@
 use async_trait::async_trait;
-use http::header::{HeaderValue, COOKIE};
-use http::{Request, StatusCode};
-use std::env;
-use std::str::FromStr;
+use http::header::HeaderValue;
+use http::{header, Request, Response};
+use std::convert::TryFrom;
+use std::convert::TryInto;
 
 use crate::chainable::Chainable;
-use crate::error::{Error, HaloWaypointError};
-use crate::halo_waypoint::requests::service_record::{
-    GetServiceRecordRequest, GetServiceRecordResponse,
-};
+use crate::error::Error;
+use crate::halo_waypoint::requests::auth::*;
+use crate::halo_waypoint::requests::service_record::*;
 
 #[async_trait]
 pub trait Client: Sync {
     async fn request<Req, Res>(&self, req: Req) -> Result<Res, Error>
     where
         Req: Into<Request<hyper::Body>> + Send,
-        Res: FromStr<Err = Error>;
+        Res: TryFrom<Response<String>, Error = Error>;
+
+    async fn get_auth(&self, req: &GetAuthRequest) -> Result<GetAuthResponse, Error> {
+        let res = self.request(&GetAuthRequestLoginFormRequest).await?;
+        let req = GetAuthRequestLoginRequest::from((req, &res));
+        let res = self.request(&req).await?;
+        let req = GetAuthRequestRedirectRequest::from(&res);
+        let res = self.request(&req).await?;
+
+        Ok(GetAuthResponse::from(&res))
+    }
 
     async fn get_service_record(
         &self,
+        auth: &GetAuthResponse,
         req: &GetServiceRecordRequest,
     ) -> Result<GetServiceRecordResponse, Error> {
-        self.request(req).await
+        let req = GetServiceRecordRequestAuthenticated::from((auth, req));
+        self.request(&req).await
     }
 }
 
@@ -31,22 +42,14 @@ pub struct HyperClient {
         hyper_tls::HttpsConnector<hyper::client::HttpConnector>,
         hyper::body::Body,
     >,
-    auth_header: HeaderValue,
 }
 
 impl Default for HyperClient {
     fn default() -> Self {
         let https = hyper_tls::HttpsConnector::new();
         let client = hyper::Client::builder().build(https);
-        let auth_header = env::var("HALO_WAYPOINT_AUTH")
-            .expect("Environment variable not found: HALO_WAYPOINT_AUTH")
-            .pipe(|auth| format!("Auth={}", auth).parse())
-            .expect("Invalid header value: HALO_WAYPOINT_AUTH");
 
-        HyperClient {
-            client,
-            auth_header,
-        }
+        HyperClient { client }
     }
 }
 
@@ -55,14 +58,22 @@ impl Client for HyperClient {
     async fn request<Req, Res>(&self, req: Req) -> Result<Res, Error>
     where
         Req: Into<Request<hyper::body::Body>> + Send,
-        Res: FromStr<Err = Error>,
+        Res: TryFrom<Response<String>, Error = Error>,
     {
         let mut req = req.into();
-        req.headers_mut().append(COOKIE, self.auth_header.clone());
+        req.headers_mut().append(
+            header::USER_AGENT,
+            HeaderValue::from_static("halomcc.run/0.1"),
+        );
 
         let res = self.client.request(req).await?;
-
-        let status = res.status();
+        let res_without_body = res
+            .headers()
+            .into_iter()
+            .fold(Response::builder(), |res, (name, value)| {
+                res.header(name, value)
+            })
+            .status(res.status());
 
         let body = hyper::body::to_bytes(res)
             .await?
@@ -70,14 +81,7 @@ impl Client for HyperClient {
             .pipe(String::from_utf8)
             .unwrap();
 
-        match status {
-            StatusCode::OK => body.parse(),
-            other => Err(HaloWaypointError::Http {
-                status: other.as_u16(),
-                body,
-            }
-            .into()),
-        }
+        res_without_body.body(body).unwrap().try_into()
     }
 }
 
@@ -89,15 +93,26 @@ mod hyper_client_tests {
 
     #[tokio::test]
     #[ignore]
-    async fn get_products_page() {
+    async fn get_auth() {
+        let req = GetAuthRequest::default();
+        let res = HyperClient::default().get_auth(&req).await;
+
+        assert!(res.is_ok());
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn get_service_record() {
+        let req = GetAuthRequest::default();
+        let auth = HyperClient::default().get_auth(&req).await.unwrap();
+
         let req = GetServiceRecordRequest::new(
             "John117".to_string(),
             Game::HaloCombatEvolved,
             CampaignMode::Solo,
         );
 
-        let res = HyperClient::default().get_service_record(&req).await;
-        println!("{:?}", res);
+        let res = HyperClient::default().get_service_record(&auth, &req).await;
 
         assert!(res.is_ok());
     }

@@ -3,6 +3,7 @@ use crate::games::game::{Game, GameProperties};
 use crate::halo_waypoint::client::Client;
 use crate::halo_waypoint::client::HyperClient;
 use crate::halo_waypoint::models::campaign_mode::CampaignMode;
+use crate::halo_waypoint::requests::auth::GetAuthRequest;
 use crate::halo_waypoint::requests::service_record::GetServiceRecordRequest;
 use crate::missions::mission::{Mission, MissionProperties};
 use crate::service_records::service_record::ServiceRecord;
@@ -18,10 +19,17 @@ impl ServiceRecordsDao {
         player: String,
         game: &Game,
     ) -> Option<Vec<ServiceRecord>> {
-        let req = GetServiceRecordRequest::new(player.clone(), game.into(), CampaignMode::Solo);
+        let req = GetAuthRequest::default();
+        let auth = self
+            .halo_waypoint
+            .get_auth(&req)
+            .await
+            .map_err(|err| eprintln!("{:?}", err))
+            .ok()?;
 
+        let req = GetServiceRecordRequest::new(player.clone(), game.into(), CampaignMode::Solo);
         self.halo_waypoint
-            .get_service_record(&req)
+            .get_service_record(&auth, &req)
             .await
             .map(|res| {
                 let game: Game = res.game().into();
@@ -37,7 +45,7 @@ impl ServiceRecordsDao {
                     })
                     .collect()
             })
-            .map_err(|err| println!("{:?}", err))
+            .map_err(|err| eprintln!("{:?}", err))
             .ok()
     }
 
