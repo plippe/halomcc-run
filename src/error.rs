@@ -1,6 +1,8 @@
+use http::Response;
+
 #[derive(Debug)]
 pub enum HaloWaypointError {
-    Http { status: u16, body: String },
+    Http { response: Response<String> },
     MissingGame,
     UnknownGame { game: String },
     MissingMissionId,

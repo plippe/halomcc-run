@@ -1,6 +1,6 @@
 use http::method::Method;
 use http::uri::{Builder, PathAndQuery, Scheme, Uri};
-use http::Request;
+use http::{header, Request, Response, StatusCode};
 use hyper::Body;
 use scraper::{ElementRef, Html, Selector};
 use std::convert::TryFrom;
@@ -13,6 +13,7 @@ use crate::error::{Error, HaloWaypointError};
 use crate::halo_waypoint::models::campaign_mode::CampaignMode;
 use crate::halo_waypoint::models::difficulty::Difficulty;
 use crate::halo_waypoint::models::game::Game;
+use crate::halo_waypoint::requests::auth::GetAuthResponse;
 
 pub struct GetServiceRecordRequest {
     player: String,
@@ -21,8 +22,8 @@ pub struct GetServiceRecordRequest {
 }
 
 impl GetServiceRecordRequest {
-    pub fn new(player: String, game: Game, campaign_mode: CampaignMode) -> GetServiceRecordRequest {
-        GetServiceRecordRequest {
+    pub fn new(player: String, game: Game, campaign_mode: CampaignMode) -> Self {
+        Self {
             player,
             game,
             campaign_mode,
@@ -30,8 +31,42 @@ impl GetServiceRecordRequest {
     }
 }
 
-impl From<&GetServiceRecordRequest> for Uri {
-    fn from(req: &GetServiceRecordRequest) -> Uri {
+pub struct GetServiceRecordRequestAuthenticated {
+    auth_header: String,
+    player: String,
+    game: Game,
+    campaign_mode: CampaignMode,
+}
+
+impl GetServiceRecordRequestAuthenticated {
+    pub fn new(
+        auth_header: String,
+        player: String,
+        game: Game,
+        campaign_mode: CampaignMode,
+    ) -> Self {
+        Self {
+            auth_header,
+            player,
+            game,
+            campaign_mode,
+        }
+    }
+}
+
+impl From<(&GetAuthResponse, &GetServiceRecordRequest)> for GetServiceRecordRequestAuthenticated {
+    fn from(req: (&GetAuthResponse, &GetServiceRecordRequest)) -> Self {
+        Self::new(
+            req.0.auth_header(),
+            req.1.player.clone(),
+            req.1.game,
+            req.1.campaign_mode,
+        )
+    }
+}
+
+impl From<&GetServiceRecordRequestAuthenticated> for Uri {
+    fn from(req: &GetServiceRecordRequestAuthenticated) -> Self {
         let path_and_query = format!(
             "/{}/games/{}/{}/service-records/players/{}/missions?game={}&campaignMode={}",
             "en-us",                            // local
@@ -53,18 +88,12 @@ impl From<&GetServiceRecordRequest> for Uri {
     }
 }
 
-impl From<&GetServiceRecordRequest> for Method {
-    fn from(_: &GetServiceRecordRequest) -> Method {
-        Method::GET
-    }
-}
-
-impl From<&GetServiceRecordRequest> for Request<Body> {
-    fn from(req: &GetServiceRecordRequest) -> Request<Body> {
+impl From<&GetServiceRecordRequestAuthenticated> for Request<Body> {
+    fn from(req: &GetServiceRecordRequestAuthenticated) -> Self {
         Request::builder()
-            .method(Method::from(req))
+            .method(Method::GET)
             .uri(Uri::from(req))
-            .header("user-agent", "halomcc.run/0.1")
+            .header(header::COOKIE, format!("Auth={}", req.auth_header.clone()))
             .header("X-Requested-With", "XMLHttpRequest")
             .body(Body::empty())
             .unwrap()
@@ -77,7 +106,8 @@ mod get_service_record_request_test {
 
     #[test]
     fn into_uri() {
-        let req = GetServiceRecordRequest::new(
+        let req = GetServiceRecordRequestAuthenticated::new(
+            "".to_string(),
             "John117".to_string(),
             Game::HaloCombatEvolved,
             CampaignMode::Solo,
@@ -104,26 +134,25 @@ impl GetServiceRecordResponse {
         self.game
     }
 
-    // pub fn campaign_mode(&self) -> CampaignMode {
-    //     self.campaign_mode
-    // }
-
     pub fn missions(&self) -> Vec<GetServiceRecordResponseMission> {
         self.missions.clone()
     }
 }
 
-impl FromStr for GetServiceRecordResponse {
-    type Err = Error;
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        Html::parse_fragment(s).pipe(GetServiceRecordResponse::try_from)
+impl TryFrom<Response<String>> for GetServiceRecordResponse {
+    type Error = Error;
+    fn try_from(res: Response<String>) -> Result<Self, Self::Error> {
+        match res.status() {
+            StatusCode::OK => Html::parse_fragment(res.body()).pipe(Self::try_from),
+            _ => Err(HaloWaypointError::Http { response: res }.into()),
+        }
     }
 }
 
 impl TryFrom<Html> for GetServiceRecordResponse {
     type Error = Error;
     fn try_from(html: Html) -> Result<Self, Self::Error> {
-        html.root_element().pipe(GetServiceRecordResponse::try_from)
+        html.root_element().pipe(Self::try_from)
     }
 }
 
@@ -162,7 +191,7 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
             });
 
         match (game, campaign_mode, missions) {
-            (Ok(game), Ok(campaign_mode), Ok(missions)) => Ok(GetServiceRecordResponse {
+            (Ok(game), Ok(campaign_mode), Ok(missions)) => Ok(Self {
                 game,
                 campaign_mode,
                 missions,
@@ -250,7 +279,7 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
                 .map_err(|err| err.into());
 
         match (id, difficulty, time) {
-            (Ok(id), Ok(difficulty), Ok(time)) => Ok(GetServiceRecordResponseMission {
+            (Ok(id), Ok(difficulty), Ok(time)) => Ok(Self {
                 id,
                 difficulty,
                 time,
@@ -278,7 +307,7 @@ mod get_service_record_response_test {
             .map(|entry| {
                 fs::read_to_string(entry.unwrap().path())
                     .unwrap()
-                    .pipe(|s| GetServiceRecordResponse::from_str(&s))
+                    .pipe(|s| Html::parse_fragment(&s).pipe(GetServiceRecordResponse::try_from))
             })
             .collect::<Result<Vec<GetServiceRecordResponse>, Error>>();
 
@@ -290,7 +319,7 @@ mod get_service_record_response_test {
     fn halo_solo() {
         let res = fs::read_to_string("resources/halo_waypoint/service_records/halo_solo.html")
             .unwrap()
-            .pipe(|s| GetServiceRecordResponse::from_str(&s))
+            .pipe(|s| Html::parse_fragment(&s).pipe(GetServiceRecordResponse::try_from))
             .unwrap();
 
         assert_eq!(res.game, Game::HaloCombatEvolved);
@@ -393,7 +422,7 @@ mod get_service_record_response_test {
     fn halo_coop() {
         let res = fs::read_to_string("resources/halo_waypoint/service_records/halo_coop.html")
             .unwrap()
-            .pipe(|s| GetServiceRecordResponse::from_str(&s))
+            .pipe(|s| Html::parse_fragment(&s).pipe(GetServiceRecordResponse::try_from))
             .unwrap();
 
         assert_eq!(res.game, Game::HaloCombatEvolved);

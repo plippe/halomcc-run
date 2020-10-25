@@ -13,6 +13,7 @@ hyper = "0.13.7"
 hyper-tls = "0.4.3"
 juniper = { git = "https://github.com/graphql-rust/juniper.git", features = ["expose-test-schema"] }
 juniper_hyper = { git = "https://github.com/graphql-rust/juniper.git" }
+regex = "1.4.1"
 scraper = "0.12.0"
 strum = "0.19.4"
 strum_macros = "0.19.4"
