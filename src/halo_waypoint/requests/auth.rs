@@ -210,7 +210,7 @@ pub struct GetAuthRequestRedirectResponse {
 
 impl GetAuthRequestRedirectResponse {
     fn regex_auth_header() -> Regex {
-        Regex::new("^Auth=([^;]+);").unwrap()
+        Regex::new("^(Auth=[^;]+);").unwrap()
     }
 
     fn new(auth_header: String) -> Self {

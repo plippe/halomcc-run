@@ -93,7 +93,7 @@ impl From<&GetServiceRecordRequestAuthenticated> for Request<Body> {
         Request::builder()
             .method(Method::GET)
             .uri(Uri::from(req))
-            .header(header::COOKIE, format!("Auth={}", req.auth_header.clone()))
+            .header(header::COOKIE, req.auth_header.clone())
             .header("X-Requested-With", "XMLHttpRequest")
             .body(Body::empty())
             .unwrap()
