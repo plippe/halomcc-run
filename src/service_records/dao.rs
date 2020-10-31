@@ -1,5 +1,5 @@
 use crate::games::dao::GamesDao;
-use crate::games::game::{Game, GameProperties};
+use crate::games::game::Game;
 use crate::halo_waypoint::client::{Client, HyperClient, InMemoryCacheClient};
 use crate::halo_waypoint::models::campaign_mode::CampaignMode;
 use crate::halo_waypoint::requests::auth::GetAuthRequest;
@@ -30,20 +30,7 @@ impl ServiceRecordsDao {
         self.halo_waypoint
             .get_service_record(&auth, &req)
             .await
-            .map(|res| {
-                let game: Game = res.game().into();
-                res.missions()
-                    .into_iter()
-                    .map(|mission| {
-                        ServiceRecord::new(
-                            player.clone(),
-                            GameProperties::from(&game).id(),
-                            mission.id() as i32,
-                            mission.time(),
-                        )
-                    })
-                    .collect()
-            })
+            .map(|res| res.with_player(player).into())
             .map_err(|err| eprintln!("{:?}", err))
             .ok()
     }

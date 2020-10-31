@@ -10,10 +10,12 @@ use time::Time;
 
 use crate::chainable::Chainable;
 use crate::error::{Error, HaloWaypointError};
+use crate::games::game::GameProperties as MyGameProperties;
 use crate::halo_waypoint::models::campaign_mode::CampaignMode;
 use crate::halo_waypoint::models::difficulty::Difficulty;
 use crate::halo_waypoint::models::game::Game;
 use crate::halo_waypoint::requests::auth::GetAuthResponse;
+use crate::service_records::service_record::ServiceRecord as MyServiceRecord;
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct GetServiceRecordRequest {
@@ -138,6 +140,21 @@ impl GetServiceRecordResponse {
     pub fn missions(&self) -> Vec<GetServiceRecordResponseMission> {
         self.missions.clone()
     }
+
+    fn missions_id_delta(&self) -> i32 {
+        match self.game {
+            Game::HaloCombatEvolved => 1,
+            Game::Halo2 => -30,
+            Game::Halo3 => -69,
+            Game::Halo3Odst => -167,
+            Game::HaloReach => -177,
+            Game::Halo4 => -103,
+        }
+    }
+
+    pub fn with_player(self, player: String) -> PlayerWithGetServiceRecordResponse {
+        PlayerWithGetServiceRecordResponse::new(player, self)
+    }
 }
 
 impl TryFrom<Response<String>> for GetServiceRecordResponse {
@@ -224,9 +241,9 @@ impl GetServiceRecordResponseMission {
         self.id
     }
 
-    // pub fn difficulty(&self) -> Option<Difficulty> {
-    //     self.difficulty
-    // }
+    pub fn difficulty(&self) -> Option<Difficulty> {
+        self.difficulty
+    }
 
     pub fn time(&self) -> Option<Time> {
         self.time
@@ -522,5 +539,38 @@ mod get_service_record_response_test {
         );
 
         assert_eq!(res.missions.get(10), None);
+    }
+}
+
+pub struct PlayerWithGetServiceRecordResponse {
+    player: String,
+    response: GetServiceRecordResponse,
+}
+
+impl PlayerWithGetServiceRecordResponse {
+    fn new(
+        player: String,
+        response: GetServiceRecordResponse,
+    ) -> PlayerWithGetServiceRecordResponse {
+        PlayerWithGetServiceRecordResponse { player, response }
+    }
+}
+
+impl Into<Vec<MyServiceRecord>> for PlayerWithGetServiceRecordResponse {
+    fn into(self) -> Vec<MyServiceRecord> {
+        let game = self.response.game().into();
+        self.response
+            .missions()
+            .into_iter()
+            .map(|mission| {
+                MyServiceRecord::new(
+                    self.player.clone(),
+                    MyGameProperties::from(&game).id(),
+                    self.response.missions_id_delta() + mission.id() as i32,
+                    mission.difficulty().map(|d| d.into()),
+                    mission.time(),
+                )
+            })
+            .collect()
     }
 }
