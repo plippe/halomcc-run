@@ -121,11 +121,7 @@ impl<A: Client> InMemoryCacheClient<A> {
         GetCache: FnOnce(&Self) -> &RwLock<TtlCache<Req, Result<Res, Error>>> + Copy,
         GetCacheTtl: FnOnce(&Self) -> &Duration,
     {
-        let res = get_cache(self)
-            .read()
-            .unwrap()
-            .get(req)
-            .map(|res| res.clone());
+        let res = get_cache(self).read().unwrap().get(req).cloned();
         match res {
             Some(res) => res,
             None => {
@@ -133,7 +129,7 @@ impl<A: Client> InMemoryCacheClient<A> {
                 get_cache(self).write().unwrap().insert(
                     req.clone(),
                     res.clone(),
-                    get_cache_ttl(self).clone(),
+                    *get_cache_ttl(self),
                 );
 
                 res
