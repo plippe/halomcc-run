@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use crate::error::{Error, HaloWaypointError};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum CampaignMode {
     Solo,
     Coop,

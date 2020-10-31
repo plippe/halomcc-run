@@ -15,6 +15,7 @@ use crate::halo_waypoint::models::difficulty::Difficulty;
 use crate::halo_waypoint::models::game::Game;
 use crate::halo_waypoint::requests::auth::GetAuthResponse;
 
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub struct GetServiceRecordRequest {
     player: String,
     game: Game,
@@ -122,7 +123,7 @@ mod get_service_record_request_test {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GetServiceRecordResponse {
     game: Game,
     campaign_mode: CampaignMode,

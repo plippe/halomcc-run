@@ -10,6 +10,7 @@ use std::result::Result;
 
 use crate::error::{Error, HaloWaypointError};
 
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub struct GetAuthRequest {
     login: String,
     password: String,
@@ -247,7 +248,7 @@ impl TryFrom<Response<String>> for GetAuthRequestRedirectResponse {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct GetAuthResponse {
     auth_header: String,
 }

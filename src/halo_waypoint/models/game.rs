@@ -4,7 +4,7 @@ use std::str::FromStr;
 use crate::error::{Error, HaloWaypointError};
 use crate::games::game::Game as MyGame;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Game {
     HaloReach,
     HaloCombatEvolved,
