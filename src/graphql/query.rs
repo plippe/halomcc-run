@@ -8,10 +8,10 @@ pub struct Query;
 #[graphql_object(Context = Context)]
 impl Query {
     fn games(context: &Context) -> FieldResult<Vec<Game>> {
-        Ok(context.games_dao.all())
+        Ok(context.games_dao().all())
     }
 
     fn game(context: &Context, id: i32) -> FieldResult<Option<Game>> {
-        Ok(context.games_dao.find_by_id(id))
+        Ok(context.games_dao().find_by_id(id))
     }
 }

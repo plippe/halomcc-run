@@ -16,7 +16,7 @@ impl Game {
 
     fn missions(&self, context: &Context) -> Vec<Mission> {
         context
-            .missions_dao
+            .missions_dao()
             .all_by_game_id(GameProperties::from(self).id())
     }
 }
