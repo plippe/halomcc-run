@@ -90,7 +90,10 @@ impl TryFrom<Response<String>> for GetAuthRequestLoginFormResponse {
 
         match (res.status(), ppft, uri) {
             (StatusCode::OK, Some(ppft), Some(uri)) => Ok(Self::new(uri, ppft, cookies)),
-            _ => Err(HaloWaypointError::Http { response: res }.into()),
+            _ => Err(HaloWaypointError::Http {
+                body: res.into_body(),
+            }
+            .into()),
         }
     }
 }
@@ -172,7 +175,10 @@ impl TryFrom<Response<String>> for GetAuthRequestLoginResponse {
 
         match (res.status(), location) {
             (StatusCode::FOUND, Some(location)) => Ok(Self::new(location)),
-            _ => Err(HaloWaypointError::Http { response: res }.into()),
+            _ => Err(HaloWaypointError::Http {
+                body: res.into_body(),
+            }
+            .into()),
         }
     }
 }
@@ -233,7 +239,10 @@ impl TryFrom<Response<String>> for GetAuthRequestRedirectResponse {
 
         match (res.status(), auth_header) {
             (StatusCode::FOUND, Some(auth_header)) => Ok(Self::new(auth_header)),
-            _ => Err(HaloWaypointError::Http { response: res }.into()),
+            _ => Err(HaloWaypointError::Http {
+                body: res.into_body(),
+            }
+            .into()),
         }
     }
 }

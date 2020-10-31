@@ -144,7 +144,10 @@ impl TryFrom<Response<String>> for GetServiceRecordResponse {
     fn try_from(res: Response<String>) -> Result<Self, Self::Error> {
         match res.status() {
             StatusCode::OK => Html::parse_fragment(res.body()).pipe(Self::try_from),
-            _ => Err(HaloWaypointError::Http { response: res }.into()),
+            _ => Err(HaloWaypointError::Http {
+                body: res.into_body(),
+            }
+            .into()),
         }
     }
 }
