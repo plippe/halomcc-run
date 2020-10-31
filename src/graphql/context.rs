@@ -3,9 +3,23 @@ use crate::missions::dao::MissionsDao;
 use crate::service_records::dao::ServiceRecordsDao;
 
 pub struct Context {
-    pub games_dao: GamesDao,
-    pub missions_dao: MissionsDao,
-    pub service_records_doa: ServiceRecordsDao,
+    games_dao: GamesDao,
+    missions_dao: MissionsDao,
+    service_records_doa: ServiceRecordsDao,
+}
+
+impl Context {
+    pub fn games_dao(&self) -> &GamesDao {
+        &self.games_dao
+    }
+
+    pub fn missions_dao(&self) -> &MissionsDao {
+        &self.missions_dao
+    }
+
+    pub fn service_records_doa(&self) -> &ServiceRecordsDao {
+        &self.service_records_doa
+    }
 }
 
 impl Default for Context {

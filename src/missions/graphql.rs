@@ -28,7 +28,7 @@ impl Mission {
         context: &Context,
     ) -> Option<ServiceRecord> {
         context
-            .service_records_doa
+            .service_records_doa()
             .find_by_player_and_mission(player, self)
             .await
     }
