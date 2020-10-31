@@ -22,4 +22,8 @@ impl ServiceRecord {
     fn time_in_seconds(&self) -> Option<i32> {
         self.time().map(|time| Time::from(time).seconds())
     }
+
+    fn difficulty(&self) -> Option<String> {
+        self.difficulty().map(|difficulty| difficulty.to_string())
+    }
 }

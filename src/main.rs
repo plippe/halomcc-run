@@ -1,4 +1,5 @@
 mod chainable;
+mod difficulties;
 mod error;
 mod games;
 mod graphql;

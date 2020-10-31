@@ -1,6 +1,7 @@
 use std::result::Result;
 use std::str::FromStr;
 
+use crate::difficulties::difficulty::Difficulty as MyDifficulty;
 use crate::error::{Error, HaloWaypointError};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -23,6 +24,17 @@ impl FromStr for Difficulty {
                 difficulty: difficulty.to_string(),
             }
             .into()),
+        }
+    }
+}
+
+impl Into<MyDifficulty> for Difficulty {
+    fn into(self) -> MyDifficulty {
+        match self {
+            Difficulty::Easy => MyDifficulty::Easy,
+            Difficulty::Normal => MyDifficulty::Normal,
+            Difficulty::Heroic => MyDifficulty::Heroic,
+            Difficulty::Legendary => MyDifficulty::Legendary,
         }
     }
 }
