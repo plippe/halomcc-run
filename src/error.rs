@@ -1,30 +1,40 @@
-use http::Response;
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum HaloWaypointError {
-    Http { response: Response<String> },
+    Http {
+        /*parts: http::response::Parts,*/ body: String,
+    },
     MissingGame,
-    UnknownGame { game: String },
+    UnknownGame {
+        game: String,
+    },
     MissingMissionId,
-    InvalidMissionId { mission_id: String },
+    InvalidMissionId {
+        mission_id: String,
+    },
     MissingDifficulty,
-    UnknownDifficulty { difficulty: String },
+    UnknownDifficulty {
+        difficulty: String,
+    },
     MissingCampaignMode,
-    UnknownCampaignMode { campaign_mode: String },
+    UnknownCampaignMode {
+        campaign_mode: String,
+    },
     MissingTime,
-    InvalidTime { time: String },
+    InvalidTime {
+        time: String,
+    },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Error {
-    Hyper(hyper::Error),
+    Hyper(String),
     HaloWaypoint(HaloWaypointError),
     List { errors: Vec<Error> },
 }
 
 impl From<hyper::Error> for Error {
     fn from(err: hyper::Error) -> Self {
-        Error::Hyper(err)
+        Error::Hyper(format!("{:?}", err))
     }
 }
 
