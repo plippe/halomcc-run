@@ -1,7 +1,6 @@
 use crate::games::dao::GamesDao;
 use crate::games::game::{Game, GameProperties};
-use crate::halo_waypoint::client::Client;
-use crate::halo_waypoint::client::HyperClient;
+use crate::halo_waypoint::client::{Client, HyperClient, InMemoryCacheClient};
 use crate::halo_waypoint::models::campaign_mode::CampaignMode;
 use crate::halo_waypoint::requests::auth::GetAuthRequest;
 use crate::halo_waypoint::requests::service_record::GetServiceRecordRequest;
@@ -10,11 +9,11 @@ use crate::service_records::service_record::ServiceRecord;
 
 pub struct ServiceRecordsDao {
     games_dao: GamesDao,
-    halo_waypoint: HyperClient,
+    halo_waypoint: InMemoryCacheClient<HyperClient>,
 }
 
 impl ServiceRecordsDao {
-    async fn find_by_player_and_game(
+    pub async fn find_by_player_and_game(
         &self,
         player: String,
         game: &Game,
@@ -80,7 +79,7 @@ impl Default for ServiceRecordsDao {
     fn default() -> Self {
         ServiceRecordsDao {
             games_dao: GamesDao::default(),
-            halo_waypoint: HyperClient::default(),
+            halo_waypoint: InMemoryCacheClient::default(),
         }
     }
 }
