@@ -1,7 +1,7 @@
 use juniper::graphql_object;
 
 use crate::graphql::context::Context;
-use crate::graphql::time::Time;
+use crate::graphql::models::time::Time;
 use crate::missions::mission::{Mission, MissionProperties};
 use crate::service_records::service_record::ServiceRecord;
 

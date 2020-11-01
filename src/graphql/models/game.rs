@@ -8,17 +8,17 @@ use crate::service_records::service_record::ServiceRecord;
 #[graphql_object(Context = Context)]
 impl Game {
     fn id(&self) -> i32 {
-        GameProperties::from(self).id()
+        GameProperties::from(*self).id()
     }
 
     fn name(&self) -> String {
-        GameProperties::from(self).name()
+        GameProperties::from(*self).name()
     }
 
     fn missions(&self, context: &Context) -> Vec<Mission> {
         context
             .missions_dao()
-            .all_by_game_id(GameProperties::from(self).id())
+            .all_by_game_id(GameProperties::from(*self).id())
     }
 
     async fn service_record_by_player(
@@ -28,7 +28,7 @@ impl Game {
     ) -> Option<Vec<ServiceRecord>> {
         context
             .service_records_doa()
-            .find_by_player_and_game(player, self)
+            .find_by_player_and_game(player, *self)
             .await
     }
 }

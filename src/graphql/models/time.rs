@@ -1,4 +1,5 @@
-// TODO: GraphQL shouldn't require explicit conversions
+use juniper::{ParseScalarResult, Value};
+
 pub struct Time(time::Time);
 
 impl Time {
@@ -27,5 +28,24 @@ mod time_test {
     #[test]
     fn max() {
         assert_eq!(Time(time::time!(23:59:59.999_999_999)).seconds(), 86399)
+    }
+}
+
+#[juniper::graphql_scalar(description = "Time")]
+impl<S> GraphQLScalar for Time
+where
+    S: ScalarValue,
+{
+    // Define how to convert your custom scalar into a primitive type.
+    fn resolve(&self) -> Value {
+        Value::scalar(self.seconds())
+    }
+
+    fn from_input_value(_v: &InputValue) -> Option<Time> {
+        unimplemented!();
+    }
+
+    fn from_str<'a>(_value: ScalarToken<'a>) -> ParseScalarResult<'a, S> {
+        unimplemented!();
     }
 }
