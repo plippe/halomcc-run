@@ -1,13 +1,13 @@
 use time::Time;
 
+use crate::campaign_modes::campaign_mode::CampaignMode;
 use crate::difficulties::difficulty::Difficulty;
 
 pub struct ServiceRecord {
     player: String,
     game_id: i32,
     mission_id: i32,
-    difficulty: Option<Difficulty>,
-    time: Option<Time>,
+    runs: Vec<ServiceRecordRun>,
 }
 
 impl ServiceRecord {
@@ -15,15 +15,13 @@ impl ServiceRecord {
         player: String,
         game_id: i32,
         mission_id: i32,
-        difficulty: Option<Difficulty>,
-        time: Option<Time>,
+        runs: Vec<ServiceRecordRun>,
     ) -> ServiceRecord {
         ServiceRecord {
             player,
             game_id,
             mission_id,
-            difficulty,
-            time,
+            runs,
         }
     }
 
@@ -39,11 +37,36 @@ impl ServiceRecord {
         self.mission_id
     }
 
-    pub fn difficulty(&self) -> Option<Difficulty> {
+    pub fn runs(&self) -> Vec<ServiceRecordRun> {
+        self.runs.clone()
+    }
+}
+
+#[derive(Clone)]
+pub struct ServiceRecordRun {
+    campaign_mode: CampaignMode,
+    difficulty: Difficulty,
+    time: Time,
+}
+
+impl ServiceRecordRun {
+    pub fn new(campaign_mode: CampaignMode, difficulty: Difficulty, time: Time) -> Self {
+        Self {
+            campaign_mode,
+            difficulty,
+            time,
+        }
+    }
+
+    pub fn campaign_mode(&self) -> CampaignMode {
+        self.campaign_mode
+    }
+
+    pub fn difficulty(&self) -> Difficulty {
         self.difficulty
     }
 
-    pub fn time(&self) -> Option<Time> {
+    pub fn time(&self) -> Time {
         self.time
     }
 }

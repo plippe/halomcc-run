@@ -1,9 +1,15 @@
+use futures::future::join_all;
+
+use crate::campaign_modes::campaign_mode::CampaignMode;
+use crate::chainable::Chainable;
+use crate::error::Error;
 use crate::games::dao::GamesDao;
 use crate::games::game::Game;
 use crate::halo_waypoint::client::{Client, HyperClient, InMemoryCacheClient};
-use crate::halo_waypoint::models::campaign_mode::CampaignMode;
 use crate::halo_waypoint::requests::auth::GetAuthRequest;
-use crate::halo_waypoint::requests::service_record::GetServiceRecordRequest;
+use crate::halo_waypoint::requests::service_record::{
+    GetServiceRecordRequest, GetServiceRecordResponse, PlayerWithGetServiceRecordResponse,
+};
 use crate::missions::mission::{Mission, MissionProperties};
 use crate::service_records::service_record::ServiceRecord;
 
@@ -26,11 +32,19 @@ impl ServiceRecordsDao {
             .map_err(|err| eprintln!("{:?}", err))
             .ok()?;
 
-        let req = GetServiceRecordRequest::new(player.clone(), game.into(), CampaignMode::Solo);
-        self.halo_waypoint
-            .get_service_record(&auth, &req)
+        vec![CampaignMode::Solo, CampaignMode::Coop]
+            .into_iter()
+            .map(|campaign_mode| {
+                let auth = auth.clone();
+                let req = GetServiceRecordRequest::new(player.clone(), game, campaign_mode);
+
+                async move { self.halo_waypoint.get_service_record(&auth, &req).await }
+            })
+            .pipe(join_all)
             .await
-            .map(|res| res.with_player(player).into())
+            .into_iter()
+            .collect::<Result<Vec<GetServiceRecordResponse>, Error>>()
+            .map(|res| PlayerWithGetServiceRecordResponse::from((player.clone(), res)).into())
             .map_err(|err| eprintln!("{:?}", err))
             .ok()
     }
