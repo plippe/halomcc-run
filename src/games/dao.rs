@@ -12,7 +12,7 @@ impl GamesDao {
     pub fn find_by_id(&self, id: i32) -> Option<Game> {
         self.all()
             .into_iter()
-            .find(|game| GameProperties::from(game).id() == id)
+            .find(|game| GameProperties::from(*game).id() == id)
     }
 }
 
