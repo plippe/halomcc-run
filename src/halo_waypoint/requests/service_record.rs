@@ -112,7 +112,7 @@ mod get_service_record_request_test {
         let req = GetServiceRecordRequestAuthenticated::new(
             "".to_string(),
             "John117".to_string(),
-            Game::HaloCombatEvolved,
+            Game::Halo,
             CampaignMode::Solo,
         );
         let uri = Uri::from(&req);
@@ -137,23 +137,12 @@ impl GetServiceRecordResponse {
         self.game
     }
 
+    pub fn campaign_mode(&self) -> CampaignMode {
+        self.campaign_mode
+    }
+
     pub fn missions(&self) -> Vec<GetServiceRecordResponseMission> {
         self.missions.clone()
-    }
-
-    fn missions_id_delta(&self) -> i32 {
-        match self.game {
-            Game::HaloCombatEvolved => 1,
-            Game::Halo2 => -30,
-            Game::Halo3 => -69,
-            Game::Halo3Odst => -167,
-            Game::HaloReach => -177,
-            Game::Halo4 => -103,
-        }
-    }
-
-    pub fn with_player(self, player: String) -> PlayerWithGetServiceRecordResponse {
-        PlayerWithGetServiceRecordResponse::new(player, self)
     }
 }
 
@@ -343,7 +332,7 @@ mod get_service_record_response_test {
             .pipe(|s| Html::parse_fragment(&s).pipe(GetServiceRecordResponse::try_from))
             .unwrap();
 
-        assert_eq!(res.game, Game::HaloCombatEvolved);
+        assert_eq!(res.game, Game::Halo);
         assert_eq!(res.campaign_mode, CampaignMode::Solo);
 
         assert_eq!(
@@ -446,7 +435,7 @@ mod get_service_record_response_test {
             .pipe(|s| Html::parse_fragment(&s).pipe(GetServiceRecordResponse::try_from))
             .unwrap();
 
-        assert_eq!(res.game, Game::HaloCombatEvolved);
+        assert_eq!(res.game, Game::Halo);
         assert_eq!(res.campaign_mode, CampaignMode::Coop);
         assert_eq!(
             res.missions.get(0),

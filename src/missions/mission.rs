@@ -49,7 +49,7 @@ pub struct MissionProperties {
 impl MissionProperties {
     fn new(game: Game, id: i32, name: String, par_time: Option<Time>) -> MissionProperties {
         MissionProperties {
-            game_id: GameProperties::from(&game).id(),
+            game_id: GameProperties::from(game).id(),
             id,
             name,
             par_time,

@@ -1,13 +1,8 @@
 use std::result::Result;
 use std::str::FromStr;
 
+use crate::campaign_modes::campaign_mode::CampaignMode;
 use crate::error::{Error, HaloWaypointError};
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum CampaignMode {
-    Solo,
-    Coop,
-}
 
 impl FromStr for CampaignMode {
     type Err = Error;

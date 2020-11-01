@@ -16,7 +16,7 @@ impl ServiceRecordsDao {
     pub async fn find_by_player_and_game(
         &self,
         player: String,
-        game: &Game,
+        game: Game,
     ) -> Option<Vec<ServiceRecord>> {
         let req = GetAuthRequest::default();
         let auth = self
@@ -41,7 +41,7 @@ impl ServiceRecordsDao {
         game_id: i32,
     ) -> Option<Vec<ServiceRecord>> {
         let game = self.games_dao.find_by_id(game_id)?;
-        self.find_by_player_and_game(player, &game).await
+        self.find_by_player_and_game(player, game).await
     }
 
     pub async fn find_by_player_and_mission(

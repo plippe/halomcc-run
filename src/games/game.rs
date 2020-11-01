@@ -1,6 +1,6 @@
 use strum_macros::EnumIter;
 
-#[derive(Debug, EnumIter)]
+#[derive(Debug, EnumIter, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Game {
     Halo,
     Halo2,
@@ -29,8 +29,8 @@ impl GameProperties {
     }
 }
 
-impl From<&Game> for GameProperties {
-    fn from(game: &Game) -> GameProperties {
+impl From<Game> for GameProperties {
+    fn from(game: Game) -> GameProperties {
         match game {
             Game::Halo => GameProperties::new(1, "Halo: Combat Evolved Anniversary".to_string()),
             Game::Halo2 => GameProperties::new(2, "Halo 2: Anniversary".to_string()),

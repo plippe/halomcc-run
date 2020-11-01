@@ -193,8 +193,8 @@ impl<A: Client + Sync> Client for InMemoryCacheClient<A> {
 #[cfg(test)]
 mod hyper_client_tests {
     use super::*;
-    use crate::halo_waypoint::models::campaign_mode::CampaignMode;
-    use crate::halo_waypoint::models::game::Game;
+    use crate::campaign_modes::campaign_mode::CampaignMode;
+    use crate::games::game::Game;
 
     #[tokio::test]
     #[ignore]
@@ -211,11 +211,8 @@ mod hyper_client_tests {
         let req = GetAuthRequest::default();
         let auth = HyperClient::default().get_auth(&req).await.unwrap();
 
-        let req = GetServiceRecordRequest::new(
-            "John117".to_string(),
-            Game::HaloCombatEvolved,
-            CampaignMode::Solo,
-        );
+        let req =
+            GetServiceRecordRequest::new("John117".to_string(), Game::Halo, CampaignMode::Solo);
 
         let res = HyperClient::default().get_service_record(&auth, &req).await;
 
