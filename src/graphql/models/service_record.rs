@@ -35,11 +35,11 @@ impl ServiceRecordRun {
         self.difficulty()
     }
 
-    fn time_in_seconds(&self) -> Option<Time> {
-        self.time().map(|t| t.into())
+    fn time_in_seconds(&self) -> Time {
+        self.time().into()
     }
 
-    fn score(&self) -> Option<i32> {
+    fn score(&self) -> i32 {
         self.score()
     }
 }
