@@ -602,14 +602,15 @@ impl Into<Vec<ServiceRecord>> for PlayerWithGetServiceRecordResponse {
                 let missions_id_delta = r.game().missions_id_delta();
                 let campaign_mode = r.campaign_mode();
 
-                r.missions().into_iter().filter_map(move |m| {
-                    m.difficulty().map(|difficulty| {
-                        (
+                r.missions()
+                    .into_iter()
+                    .filter_map(move |m| match (m.difficulty(), m.time()) {
+                        (Some(difficulty), Some(time)) => Some((
                             (game_id, missions_id_delta + m.id() as i32),
-                            (campaign_mode, difficulty, m.time(), m.score()),
-                        )
+                            (campaign_mode, difficulty, time, m.score().unwrap_or(0)),
+                        )),
+                        _ => None,
                     })
-                })
             })
             .into_group_map()
             .into_iter()
