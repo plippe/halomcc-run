@@ -46,15 +46,22 @@ impl ServiceRecord {
 pub struct ServiceRecordRun {
     campaign_mode: CampaignMode,
     difficulty: Difficulty,
-    time: Time,
+    time: Option<Time>,
+    score: Option<i32>,
 }
 
 impl ServiceRecordRun {
-    pub fn new(campaign_mode: CampaignMode, difficulty: Difficulty, time: Time) -> Self {
+    pub fn new(
+        campaign_mode: CampaignMode,
+        difficulty: Difficulty,
+        time: Option<Time>,
+        score: Option<i32>,
+    ) -> Self {
         Self {
             campaign_mode,
             difficulty,
             time,
+            score,
         }
     }
 
@@ -66,7 +73,11 @@ impl ServiceRecordRun {
         self.difficulty
     }
 
-    pub fn time(&self) -> Time {
+    pub fn time(&self) -> Option<Time> {
         self.time
+    }
+
+    pub fn score(&self) -> Option<i32> {
+        self.score
     }
 }

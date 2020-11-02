@@ -31,11 +31,15 @@ impl ServiceRecordRun {
         self.campaign_mode()
     }
 
-    fn time_in_seconds(&self) -> Time {
-        self.time().into()
-    }
-
     fn difficulty(&self) -> Difficulty {
         self.difficulty()
+    }
+
+    fn time_in_seconds(&self) -> Option<Time> {
+        self.time().map(|t| t.into())
+    }
+
+    fn score(&self) -> Option<i32> {
+        self.score()
     }
 }
