@@ -23,6 +23,10 @@ pub enum HaloWaypointError {
     InvalidTime {
         time: String,
     },
+    MissingScore,
+    InvalidScore {
+        time: String,
+    },
 }
 
 #[derive(Debug, Clone)]

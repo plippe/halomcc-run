@@ -223,6 +223,7 @@ pub struct GetServiceRecordResponseMission {
     id: u8,
     difficulty: Option<Difficulty>,
     time: Option<Time>,
+    score: Option<i32>,
 }
 
 impl GetServiceRecordResponseMission {
@@ -236,6 +237,10 @@ impl GetServiceRecordResponseMission {
 
     pub fn time(&self) -> Option<Time> {
         self.time
+    }
+
+    pub fn score(&self) -> Option<i32> {
+        self.score
     }
 }
 
@@ -288,18 +293,40 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
                 })
                 .map_err(|err| err.into());
 
-        match (id, difficulty, time) {
-            (Ok(id), Ok(difficulty), Ok(time)) => Ok(Self {
+        let score = Selector::parse(".highest-score")
+            .unwrap()
+            .pipe(|selector| {
+                element
+                    .select(&selector)
+                    .next()
+                    .ok_or(HaloWaypointError::MissingScore)
+            })
+            .and_then(|element| match element.inner_html().as_str() {
+                "--" => Ok(None),
+                html => html
+                    .parse()
+                    .map(Some)
+                    .map_err(|_| HaloWaypointError::InvalidTime {
+                        time: html.to_string(),
+                    }),
+            })
+            .map_err(|err| err.into());
+
+        match (id, difficulty, time, score) {
+            (Ok(id), Ok(difficulty), Ok(time), Ok(score)) => Ok(Self {
                 id,
                 difficulty,
                 time,
+                score,
             }),
-            (id, difficulty, time) => vec![id.err(), difficulty.err(), time.err()]
-                .into_iter()
-                .flatten()
-                .collect::<Vec<Error>>()
-                .pipe(|errors| Error::List { errors })
-                .pipe(Err),
+            (id, difficulty, time, score) => {
+                vec![id.err(), difficulty.err(), time.err(), score.err()]
+                    .into_iter()
+                    .flatten()
+                    .collect::<Vec<Error>>()
+                    .pipe(|errors| Error::List { errors })
+                    .pipe(Err)
+            }
         }
     }
 }
@@ -340,7 +367,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 0,
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:15:53))
+                time: Some(time!(00:15:53)),
+                score: Some(23520),
             })
         );
 
@@ -349,7 +377,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 1,
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(01:27:34))
+                time: Some(time!(01:27:34)),
+                score: None,
             })
         );
 
@@ -358,7 +387,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 2,
                 difficulty: Some(Difficulty::Normal),
-                time: Some(time!(00:39:03))
+                time: Some(time!(00:39:03)),
+                score: Some(6974),
             })
         );
 
@@ -367,7 +397,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 3,
                 difficulty: Some(Difficulty::Normal),
-                time: Some(time!(00:20:47))
+                time: Some(time!(00:20:47)),
+                score: Some(8204),
             })
         );
 
@@ -376,7 +407,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 4,
                 difficulty: Some(Difficulty::Normal),
-                time: Some(time!(00:44:50))
+                time: Some(time!(00:44:50)),
+                score: Some(10301),
             })
         );
 
@@ -385,7 +417,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 5,
                 difficulty: Some(Difficulty::Normal),
-                time: Some(time!(00:18:56))
+                time: Some(time!(00:18:56)),
+                score: Some(3601),
             })
         );
 
@@ -394,7 +427,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 6,
                 difficulty: Some(Difficulty::Normal),
-                time: Some(time!(00:41:19))
+                time: Some(time!(00:41:19)),
+                score: Some(11838),
             })
         );
 
@@ -404,6 +438,7 @@ mod get_service_record_response_test {
                 id: 7,
                 difficulty: None,
                 time: None,
+                score: None
             })
         );
 
@@ -413,6 +448,7 @@ mod get_service_record_response_test {
                 id: 8,
                 difficulty: None,
                 time: None,
+                score: None,
             })
         );
 
@@ -421,7 +457,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 9,
                 difficulty: Some(Difficulty::Normal),
-                time: Some(time!(00:39:46))
+                time: Some(time!(00:39:46)),
+                score: Some(3319),
             })
         );
 
@@ -442,7 +479,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 0,
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:13:35))
+                time: Some(time!(00:13:35)),
+                score: Some(19147),
             })
         );
 
@@ -451,7 +489,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 1,
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:35:13))
+                time: Some(time!(00:35:13)),
+                score: Some(7953),
             })
         );
 
@@ -460,7 +499,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 2,
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:42:42))
+                time: Some(time!(00:42:42)),
+                score: Some(23553),
             })
         );
 
@@ -469,7 +509,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 3,
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:27:46))
+                time: Some(time!(00:27:46)),
+                score: Some(17378),
             })
         );
 
@@ -478,7 +519,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 4,
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:23:57))
+                time: Some(time!(00:23:57)),
+                score: None,
             })
         );
 
@@ -487,7 +529,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 5,
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:29:31))
+                time: Some(time!(00:29:31)),
+                score: Some(11021),
             })
         );
 
@@ -496,7 +539,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 6,
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:59:24))
+                time: Some(time!(00:59:24)),
+                score: Some(44636),
             })
         );
 
@@ -505,7 +549,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 7,
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:57:49))
+                time: Some(time!(00:57:49)),
+                score: Some(12172),
             })
         );
 
@@ -514,7 +559,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 8,
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:50:27))
+                time: Some(time!(00:50:27)),
+                score: Some(16359),
             })
         );
 
@@ -523,7 +569,8 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: 9,
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:40:42))
+                time: Some(time!(00:40:42)),
+                score: Some(21823),
             })
         );
 
@@ -555,22 +602,21 @@ impl Into<Vec<ServiceRecord>> for PlayerWithGetServiceRecordResponse {
                 let missions_id_delta = r.game().missions_id_delta();
                 let campaign_mode = r.campaign_mode();
 
-                r.missions()
-                    .into_iter()
-                    .filter_map(move |m| match (m.difficulty(), m.time()) {
-                        (Some(difficulty), Some(time)) => Some((
+                r.missions().into_iter().filter_map(move |m| {
+                    m.difficulty().map(|difficulty| {
+                        (
                             (game_id, missions_id_delta + m.id() as i32),
-                            (campaign_mode, difficulty, time),
-                        )),
-                        _ => None,
+                            (campaign_mode, difficulty, m.time(), m.score()),
+                        )
                     })
+                })
             })
             .into_group_map()
             .into_iter()
             .map(|((game_id, mission_id), runs)| {
                 let runs = runs
                     .into_iter()
-                    .map(|(c, d, t)| ServiceRecordRun::new(c, d, t))
+                    .map(|(c, d, t, s)| ServiceRecordRun::new(c, d, t, s))
                     .collect();
 
                 ServiceRecord::new(player.clone(), game_id, mission_id, runs)
