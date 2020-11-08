@@ -22,6 +22,10 @@ impl Mission {
             .map(|par_time| Time::from(par_time).seconds())
     }
 
+    fn par_score(&self) -> Option<i32> {
+        MissionProperties::from(self).par_score()
+    }
+
     async fn service_record_by_player(
         &self,
         player: String,

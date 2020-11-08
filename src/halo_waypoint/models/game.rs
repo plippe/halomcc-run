@@ -8,9 +8,9 @@ impl Game {
     pub fn missions_id_delta(self) -> i32 {
         match self {
             Game::Halo => 1,
-            Game::Halo2 => -30,
-            Game::Halo3 => -69,
-            Game::Halo3Odst => -167,
+            Game::Halo2 => -28,
+            Game::Halo3 => -68,
+            Game::Halo3Odst => -165,
             Game::HaloReach => -177,
             Game::Halo4 => -103,
         }

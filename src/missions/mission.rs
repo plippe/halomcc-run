@@ -44,15 +44,23 @@ pub struct MissionProperties {
     id: i32,
     name: String,
     par_time: Option<Time>,
+    par_score: Option<i32>,
 }
 
 impl MissionProperties {
-    fn new(game: Game, id: i32, name: String, par_time: Option<Time>) -> MissionProperties {
+    fn new(
+        game: Game,
+        id: i32,
+        name: String,
+        par_time: Option<Time>,
+        par_score: Option<i32>,
+    ) -> MissionProperties {
         MissionProperties {
             game_id: GameProperties::from(game).id(),
             id,
             name,
             par_time,
+            par_score,
         }
     }
 
@@ -70,6 +78,10 @@ impl MissionProperties {
 
     pub fn par_time(&self) -> Option<Time> {
         self.par_time
+    }
+
+    pub fn par_score(&self) -> Option<i32> {
+        self.par_score
     }
 }
 
