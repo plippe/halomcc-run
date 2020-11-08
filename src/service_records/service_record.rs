@@ -1,8 +1,11 @@
 use time::Time;
 
+use std::cmp::Ordering;
+
 use crate::campaign_modes::campaign_mode::CampaignMode;
 use crate::difficulties::difficulty::Difficulty;
 
+#[derive(PartialEq, Eq)]
 pub struct ServiceRecord {
     player: String,
     game_id: i32,
@@ -42,7 +45,19 @@ impl ServiceRecord {
     }
 }
 
-#[derive(Clone)]
+impl Ord for ServiceRecord {
+    fn cmp(&self, other: &Self) -> Ordering {
+        (self.game_id, &self.mission_id).cmp(&(other.game_id, &other.mission_id))
+    }
+}
+
+impl PartialOrd for ServiceRecord {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
 pub struct ServiceRecordRun {
     campaign_mode: CampaignMode,
     difficulty: Difficulty,
