@@ -622,6 +622,7 @@ impl Into<Vec<ServiceRecord>> for PlayerWithGetServiceRecordResponse {
 
                 ServiceRecord::new(player.clone(), game_id, mission_id, runs)
             })
+            .sorted_by_key(|service_record| service_record.mission_id())
             .collect()
     }
 }
