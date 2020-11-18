@@ -12,7 +12,7 @@ impl Game {
             Game::Halo3 => -68,
             Game::Halo3Odst => -165,
             Game::HaloReach => -177,
-            Game::Halo4 => -103,
+            Game::Halo4 => -102,
         }
     }
 }
