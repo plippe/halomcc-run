@@ -1,6 +1,6 @@
 use juniper::graphql_object;
 
-use crate::games::game::{Game, GameProperties};
+use crate::games::game::Game;
 use crate::graphql::context::Context;
 use crate::missions::mission::Mission;
 use crate::service_records::service_record::ServiceRecord;
@@ -8,17 +8,15 @@ use crate::service_records::service_record::ServiceRecord;
 #[graphql_object(Context = Context)]
 impl Game {
     fn id(&self) -> i32 {
-        GameProperties::from(*self).id()
+        self.id()
     }
 
     fn name(&self) -> String {
-        GameProperties::from(*self).name()
+        self.name()
     }
 
     fn missions(&self, context: &Context) -> Vec<Mission> {
-        context
-            .missions_dao()
-            .all_by_game_id(GameProperties::from(*self).id())
+        context.missions_dao().all_by_game_id(self.id())
     }
 
     async fn service_record_by_player(

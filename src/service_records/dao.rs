@@ -10,7 +10,7 @@ use crate::halo_waypoint::requests::auth::GetAuthRequest;
 use crate::halo_waypoint::requests::service_record::{
     GetServiceRecordRequest, GetServiceRecordResponse, PlayerWithGetServiceRecordResponse,
 };
-use crate::missions::mission::{Mission, MissionProperties};
+use crate::missions::mission::Mission;
 use crate::service_records::service_record::ServiceRecord;
 
 pub struct ServiceRecordsDao {
@@ -63,14 +63,13 @@ impl ServiceRecordsDao {
         player: String,
         mission: &Mission,
     ) -> Option<ServiceRecord> {
-        let properties = MissionProperties::from(mission);
-        self.find_by_player_and_game_id(player.clone(), properties.game_id())
+        self.find_by_player_and_game_id(player.clone(), mission.game_id())
             .await
             .and_then(|service_records| {
                 service_records.into_iter().find(|service_record| {
                     service_record.player() == player
-                        && service_record.game_id() == properties.game_id()
-                        && service_record.mission_id() == properties.id()
+                        && service_record.game_id() == mission.game_id()
+                        && service_record.mission_id() == mission.id()
                 })
             })
     }

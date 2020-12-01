@@ -8,9 +8,7 @@ mod halo_3_odst;
 mod halo_4;
 mod halo_reach;
 
-use crate::games::game::{Game, GameProperties};
-
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum Mission {
     Halo(halo::HaloMission),
     Halo2(halo_2::Halo2Mission),
@@ -37,9 +35,29 @@ impl Mission {
         .concat()
         .into_iter()
     }
+
+    pub fn game_id(self) -> i32 {
+        MissionProperties::from(self).game_id
+    }
+
+    pub fn id(self) -> i32 {
+        MissionProperties::from(self).id
+    }
+
+    pub fn name(self) -> String {
+        MissionProperties::from(self).name
+    }
+
+    pub fn par_time(self) -> Option<Time> {
+        MissionProperties::from(self).par_time
+    }
+
+    pub fn par_score(self) -> Option<i32> {
+        MissionProperties::from(self).par_score
+    }
 }
 
-pub struct MissionProperties {
+struct MissionProperties {
     game_id: i32,
     id: i32,
     name: String,
@@ -47,46 +65,8 @@ pub struct MissionProperties {
     par_score: Option<i32>,
 }
 
-impl MissionProperties {
-    fn new(
-        game: Game,
-        id: i32,
-        name: String,
-        par_time: Option<Time>,
-        par_score: Option<i32>,
-    ) -> MissionProperties {
-        MissionProperties {
-            game_id: GameProperties::from(game).id(),
-            id,
-            name,
-            par_time,
-            par_score,
-        }
-    }
-
-    pub fn game_id(&self) -> i32 {
-        self.game_id
-    }
-
-    pub fn id(&self) -> i32 {
-        self.id
-    }
-
-    pub fn name(&self) -> String {
-        self.name.clone()
-    }
-
-    pub fn par_time(&self) -> Option<Time> {
-        self.par_time
-    }
-
-    pub fn par_score(&self) -> Option<i32> {
-        self.par_score
-    }
-}
-
-impl From<&Mission> for MissionProperties {
-    fn from(mission: &Mission) -> Self {
+impl From<Mission> for MissionProperties {
+    fn from(mission: Mission) -> Self {
         match mission {
             Mission::Halo(mission) => MissionProperties::from(mission),
             Mission::Halo2(mission) => MissionProperties::from(mission),
