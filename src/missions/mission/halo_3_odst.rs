@@ -4,7 +4,7 @@ use time::time;
 use crate::games::game::Game;
 use crate::missions::mission::{Mission, MissionProperties};
 
-#[derive(Clone, EnumIter)]
+#[derive(Clone, Copy, EnumIter)]
 pub enum Halo3OdstMission {
     PrepareToDrop,
     MombasaStreets,
@@ -25,21 +25,21 @@ impl From<Halo3OdstMission> for Mission {
     }
 }
 
-impl From<&Halo3OdstMission> for MissionProperties {
+impl From<Halo3OdstMission> for MissionProperties {
     #[rustfmt::skip]
-    fn from(mission: &Halo3OdstMission) -> Self {
+    fn from(mission: Halo3OdstMission) -> Self {
         match mission {
-            Halo3OdstMission::PrepareToDrop => MissionProperties::new(Game::Halo3Odst, 1, "Prepare To Drop".to_string(), None, None),
-            Halo3OdstMission::MombasaStreets => MissionProperties::new(Game::Halo3Odst, 2, "Mombasa Streets".to_string(), None, None),
-            Halo3OdstMission::TayariPlaza => MissionProperties::new(Game::Halo3Odst, 3, "Tayari Plaza".to_string(), Some(time!(00:03:00)), Some(8_000)),
-            Halo3OdstMission::UpliftReserve => MissionProperties::new(Game::Halo3Odst, 4, "Uplift Reserve".to_string(), Some(time!(00:04:00)), Some(14_000)),
-            Halo3OdstMission::KizingoBoulevard => MissionProperties::new(Game::Halo3Odst, 5, "Kizingo Boulevard".to_string(), Some(time!(00:09:00)), Some(18_000)),
-            Halo3OdstMission::ONIAlphaSite => MissionProperties::new(Game::Halo3Odst, 6, "ONI Alpha Site".to_string(), Some(time!(00:13:00)), Some(16_000)),
-            Halo3OdstMission::NMPDHQ => MissionProperties::new(Game::Halo3Odst, 7, "NMPD HQ".to_string(), Some(time!(00:10:00)), Some(40_000)),
-            Halo3OdstMission::KikowaniStation => MissionProperties::new(Game::Halo3Odst, 8, "Kikowani Station".to_string(), Some(time!(00:10:00)), Some(42_000)),
-            Halo3OdstMission::DataHive => MissionProperties::new(Game::Halo3Odst, 9, "Data Hive".to_string(), Some(time!(00:16:00)), Some(8_000)),
-            Halo3OdstMission::CoastalHighway => MissionProperties::new(Game::Halo3Odst, 10, "Coastal Highway".to_string(), Some(time!(00:25:00)), Some(90_000)),
-            Halo3OdstMission::Epilogue => MissionProperties::new(Game::Halo3Odst, 11, "Epilogue".to_string(), None, None),
+            Halo3OdstMission::PrepareToDrop => MissionProperties { game_id: Game::Halo3Odst.id(), id: 1, name: "Prepare To Drop".to_string(), par_time: None, par_score: None },
+            Halo3OdstMission::MombasaStreets => MissionProperties { game_id: Game::Halo3Odst.id(), id: 2, name: "Mombasa Streets".to_string(), par_time: None, par_score: None },
+            Halo3OdstMission::TayariPlaza => MissionProperties { game_id: Game::Halo3Odst.id(), id: 3, name: "Tayari Plaza".to_string(), par_time: Some(time!(00:03:00)), par_score: Some(8_000) },
+            Halo3OdstMission::UpliftReserve => MissionProperties { game_id: Game::Halo3Odst.id(), id: 4, name: "Uplift Reserve".to_string(), par_time: Some(time!(00:04:00)), par_score: Some(14_000) },
+            Halo3OdstMission::KizingoBoulevard => MissionProperties { game_id: Game::Halo3Odst.id(), id: 5, name: "Kizingo Boulevard".to_string(), par_time: Some(time!(00:09:00)), par_score: Some(18_000) },
+            Halo3OdstMission::ONIAlphaSite => MissionProperties { game_id: Game::Halo3Odst.id(), id: 6, name: "ONI Alpha Site".to_string(), par_time: Some(time!(00:13:00)), par_score: Some(16_000) },
+            Halo3OdstMission::NMPDHQ => MissionProperties { game_id: Game::Halo3Odst.id(), id: 7, name: "NMPD HQ".to_string(), par_time: Some(time!(00:10:00)), par_score: Some(40_000) },
+            Halo3OdstMission::KikowaniStation => MissionProperties { game_id: Game::Halo3Odst.id(), id: 8, name: "Kikowani Station".to_string(), par_time: Some(time!(00:10:00)), par_score: Some(42_000) },
+            Halo3OdstMission::DataHive => MissionProperties { game_id: Game::Halo3Odst.id(), id: 9, name: "Data Hive".to_string(), par_time: Some(time!(00:16:00)), par_score: Some(8_000) },
+            Halo3OdstMission::CoastalHighway => MissionProperties { game_id: Game::Halo3Odst.id(), id: 10, name: "Coastal Highway".to_string(), par_time: Some(time!(00:25:00)), par_score: Some(90_000) },
+            Halo3OdstMission::Epilogue => MissionProperties { game_id: Game::Halo3Odst.id(), id: 11, name: "Epilogue".to_string(), par_time: None, par_score: None },
         }
     }
 }

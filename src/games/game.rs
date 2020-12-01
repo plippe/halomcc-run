@@ -10,34 +10,31 @@ pub enum Game {
     Halo4,
 }
 
-pub struct GameProperties {
+impl Game {
+    pub fn id(self) -> i32 {
+        GameProperties::from(self).id
+    }
+
+    pub fn name(self) -> String {
+        GameProperties::from(self).name
+    }
+}
+
+struct GameProperties {
     id: i32,
     name: String,
 }
 
-impl GameProperties {
-    fn new(id: i32, name: String) -> GameProperties {
-        GameProperties { id, name }
-    }
-
-    pub fn id(&self) -> i32 {
-        self.id
-    }
-
-    pub fn name(&self) -> String {
-        self.name.clone()
-    }
-}
-
 impl From<Game> for GameProperties {
+    #[rustfmt::skip]
     fn from(game: Game) -> GameProperties {
         match game {
-            Game::Halo => GameProperties::new(1, "Halo: Combat Evolved Anniversary".to_string()),
-            Game::Halo2 => GameProperties::new(2, "Halo 2: Anniversary".to_string()),
-            Game::Halo3 => GameProperties::new(3, "Halo 3".to_string()),
-            Game::Halo3Odst => GameProperties::new(4, "Halo 3: ODST".to_string()),
-            Game::HaloReach => GameProperties::new(5, "Halo: Reach".to_string()),
-            Game::Halo4 => GameProperties::new(6, "Halo 4".to_string()),
+            Game::Halo => GameProperties { id: 1, name: "Halo: Combat Evolved Anniversary".to_string() },
+            Game::Halo2 => GameProperties { id: 2, name: "Halo 2: Anniversary".to_string() },
+            Game::Halo3 => GameProperties { id: 3, name: "Halo 3".to_string() },
+            Game::Halo3Odst => GameProperties { id: 4, name: "Halo 3: ODST".to_string() },
+            Game::HaloReach => GameProperties { id: 5, name: "Halo: Reach".to_string() },
+            Game::Halo4 => GameProperties { id: 6, name: "Halo 4".to_string() },
         }
     }
 }

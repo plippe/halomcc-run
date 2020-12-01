@@ -13,7 +13,7 @@ use crate::campaign_modes::campaign_mode::CampaignMode;
 use crate::chainable::Chainable;
 use crate::difficulties::difficulty::Difficulty;
 use crate::error::{Error, HaloWaypointError};
-use crate::games::game::{Game, GameProperties};
+use crate::games::game::Game;
 use crate::halo_waypoint::requests::auth::GetAuthResponse;
 use crate::service_records::service_record::{ServiceRecord, ServiceRecordRun};
 
@@ -598,7 +598,7 @@ impl Into<Vec<ServiceRecord>> for PlayerWithGetServiceRecordResponse {
         self.responses
             .into_iter()
             .flat_map(|r| {
-                let game_id = GameProperties::from(r.game()).id();
+                let game_id = r.game().id();
                 let missions_id_delta = r.game().missions_id_delta();
                 let campaign_mode = r.campaign_mode();
 

@@ -1,6 +1,6 @@
 use strum::IntoEnumIterator;
 
-use crate::games::game::{Game, GameProperties};
+use crate::games::game::Game;
 
 pub struct GamesDao;
 
@@ -10,9 +10,7 @@ impl GamesDao {
     }
 
     pub fn find_by_id(&self, id: i32) -> Option<Game> {
-        self.all()
-            .into_iter()
-            .find(|game| GameProperties::from(*game).id() == id)
+        self.all().into_iter().find(|game| game.id() == id)
     }
 }
 
