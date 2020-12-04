@@ -14,6 +14,7 @@ use crate::chainable::Chainable;
 use crate::difficulties::difficulty::Difficulty;
 use crate::error::{Error, HaloWaypointError};
 use crate::games::game::Game;
+use crate::halo_waypoint::models::mission_id::MissionId;
 use crate::halo_waypoint::requests::auth::GetAuthResponse;
 use crate::service_records::service_record::{ServiceRecord, ServiceRecordRun};
 
@@ -220,14 +221,14 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct GetServiceRecordResponseMission {
-    id: u8,
+    id: MissionId,
     difficulty: Option<Difficulty>,
     time: Option<Time>,
     score: Option<i32>,
 }
 
 impl GetServiceRecordResponseMission {
-    pub fn id(&self) -> u8 {
+    pub fn id(&self) -> MissionId {
         self.id
     }
 
@@ -247,18 +248,7 @@ impl GetServiceRecordResponseMission {
 impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
     type Error = Error;
     fn try_from(element: ElementRef) -> Result<Self, Self::Error> {
-        let id = element
-            .value()
-            .attr("data-mission-id")
-            .ok_or(HaloWaypointError::MissingMissionId)
-            .and_then(|attribute| {
-                attribute
-                    .parse()
-                    .map_err(|_| HaloWaypointError::InvalidMissionId {
-                        mission_id: attribute.to_string(),
-                    })
-            })
-            .map_err(|err| err.into());
+        let id = MissionId::try_from(element);
 
         let difficulty = Selector::parse(".skull .spritesheet")
             .unwrap()
@@ -365,7 +355,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(0),
             Some(&GetServiceRecordResponseMission {
-                id: 0,
+                id: MissionId::new(0),
                 difficulty: Some(Difficulty::Legendary),
                 time: Some(time!(00:15:53)),
                 score: Some(23520),
@@ -375,7 +365,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(1),
             Some(&GetServiceRecordResponseMission {
-                id: 1,
+                id: MissionId::new(1),
                 difficulty: Some(Difficulty::Legendary),
                 time: Some(time!(01:27:34)),
                 score: None,
@@ -385,7 +375,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(2),
             Some(&GetServiceRecordResponseMission {
-                id: 2,
+                id: MissionId::new(2),
                 difficulty: Some(Difficulty::Normal),
                 time: Some(time!(00:39:03)),
                 score: Some(6974),
@@ -395,7 +385,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(3),
             Some(&GetServiceRecordResponseMission {
-                id: 3,
+                id: MissionId::new(3),
                 difficulty: Some(Difficulty::Normal),
                 time: Some(time!(00:20:47)),
                 score: Some(8204),
@@ -405,7 +395,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(4),
             Some(&GetServiceRecordResponseMission {
-                id: 4,
+                id: MissionId::new(4),
                 difficulty: Some(Difficulty::Normal),
                 time: Some(time!(00:44:50)),
                 score: Some(10301),
@@ -415,7 +405,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(5),
             Some(&GetServiceRecordResponseMission {
-                id: 5,
+                id: MissionId::new(5),
                 difficulty: Some(Difficulty::Normal),
                 time: Some(time!(00:18:56)),
                 score: Some(3601),
@@ -425,7 +415,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(6),
             Some(&GetServiceRecordResponseMission {
-                id: 6,
+                id: MissionId::new(6),
                 difficulty: Some(Difficulty::Normal),
                 time: Some(time!(00:41:19)),
                 score: Some(11838),
@@ -435,7 +425,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(7),
             Some(&GetServiceRecordResponseMission {
-                id: 7,
+                id: MissionId::new(7),
                 difficulty: None,
                 time: None,
                 score: None
@@ -445,7 +435,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(8),
             Some(&GetServiceRecordResponseMission {
-                id: 8,
+                id: MissionId::new(8),
                 difficulty: None,
                 time: None,
                 score: None,
@@ -455,7 +445,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(9),
             Some(&GetServiceRecordResponseMission {
-                id: 9,
+                id: MissionId::new(9),
                 difficulty: Some(Difficulty::Normal),
                 time: Some(time!(00:39:46)),
                 score: Some(3319),
@@ -477,7 +467,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(0),
             Some(&GetServiceRecordResponseMission {
-                id: 0,
+                id: MissionId::new(0),
                 difficulty: Some(Difficulty::Legendary),
                 time: Some(time!(00:13:35)),
                 score: Some(19147),
@@ -487,7 +477,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(1),
             Some(&GetServiceRecordResponseMission {
-                id: 1,
+                id: MissionId::new(1),
                 difficulty: Some(Difficulty::Legendary),
                 time: Some(time!(00:35:13)),
                 score: Some(7953),
@@ -497,7 +487,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(2),
             Some(&GetServiceRecordResponseMission {
-                id: 2,
+                id: MissionId::new(2),
                 difficulty: Some(Difficulty::Legendary),
                 time: Some(time!(00:42:42)),
                 score: Some(23553),
@@ -507,7 +497,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(3),
             Some(&GetServiceRecordResponseMission {
-                id: 3,
+                id: MissionId::new(3),
                 difficulty: Some(Difficulty::Legendary),
                 time: Some(time!(00:27:46)),
                 score: Some(17378),
@@ -517,7 +507,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(4),
             Some(&GetServiceRecordResponseMission {
-                id: 4,
+                id: MissionId::new(4),
                 difficulty: Some(Difficulty::Legendary),
                 time: Some(time!(00:23:57)),
                 score: None,
@@ -527,7 +517,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(5),
             Some(&GetServiceRecordResponseMission {
-                id: 5,
+                id: MissionId::new(5),
                 difficulty: Some(Difficulty::Legendary),
                 time: Some(time!(00:29:31)),
                 score: Some(11021),
@@ -537,7 +527,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(6),
             Some(&GetServiceRecordResponseMission {
-                id: 6,
+                id: MissionId::new(6),
                 difficulty: Some(Difficulty::Legendary),
                 time: Some(time!(00:59:24)),
                 score: Some(44636),
@@ -547,7 +537,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(7),
             Some(&GetServiceRecordResponseMission {
-                id: 7,
+                id: MissionId::new(7),
                 difficulty: Some(Difficulty::Legendary),
                 time: Some(time!(00:57:49)),
                 score: Some(12172),
@@ -557,7 +547,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(8),
             Some(&GetServiceRecordResponseMission {
-                id: 8,
+                id: MissionId::new(8),
                 difficulty: Some(Difficulty::Legendary),
                 time: Some(time!(00:50:27)),
                 score: Some(16359),
@@ -567,7 +557,7 @@ mod get_service_record_response_test {
         assert_eq!(
             res.missions.get(9),
             Some(&GetServiceRecordResponseMission {
-                id: 9,
+                id: MissionId::new(9),
                 difficulty: Some(Difficulty::Legendary),
                 time: Some(time!(00:40:42)),
                 score: Some(21823),
@@ -606,7 +596,7 @@ impl Into<Vec<ServiceRecord>> for PlayerWithGetServiceRecordResponse {
                     .into_iter()
                     .filter_map(move |m| match (m.difficulty(), m.time()) {
                         (Some(difficulty), Some(time)) => Some((
-                            (game_id, missions_id_delta + m.id() as i32),
+                            (game_id, missions_id_delta + m.id().value()),
                             (campaign_mode, difficulty, time, m.score().unwrap_or(0)),
                         )),
                         _ => None,
