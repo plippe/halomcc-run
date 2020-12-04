@@ -14,6 +14,7 @@ use crate::chainable::Chainable;
 use crate::difficulties::difficulty::Difficulty;
 use crate::error::{Error, HaloWaypointError};
 use crate::games::game::Game;
+use crate::halo_waypoint::models::fastest_time::FastestTime;
 use crate::halo_waypoint::models::mission_id::MissionId;
 use crate::halo_waypoint::requests::auth::GetAuthResponse;
 use crate::service_records::service_record::{ServiceRecord, ServiceRecordRun};
@@ -223,7 +224,7 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
 pub struct GetServiceRecordResponseMission {
     id: MissionId,
     difficulty: Option<Difficulty>,
-    time: Option<Time>,
+    fastest_time: FastestTime,
     score: Option<i32>,
 }
 
@@ -236,8 +237,8 @@ impl GetServiceRecordResponseMission {
         self.difficulty
     }
 
-    pub fn time(&self) -> Option<Time> {
-        self.time
+    pub fn fastest_time(&self) -> FastestTime {
+        self.fastest_time
     }
 
     pub fn score(&self) -> Option<i32> {
@@ -264,24 +265,7 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
                 attribute => attribute.parse().map(Some),
             });
 
-        let time =
-            Selector::parse(".best-time")
-                .unwrap()
-                .pipe(|selector| {
-                    element
-                        .select(&selector)
-                        .next()
-                        .ok_or(HaloWaypointError::MissingTime)
-                })
-                .and_then(|element| match element.inner_html().as_str() {
-                    "--" => Ok(None),
-                    html => Time::parse(html, "%T").map(Some).map_err(|_| {
-                        HaloWaypointError::InvalidTime {
-                            time: html.to_string(),
-                        }
-                    }),
-                })
-                .map_err(|err| err.into());
+        let fastest_time = FastestTime::try_from(element);
 
         let score = Selector::parse(".highest-score")
             .unwrap()
@@ -302,15 +286,15 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
             })
             .map_err(|err| err.into());
 
-        match (id, difficulty, time, score) {
-            (Ok(id), Ok(difficulty), Ok(time), Ok(score)) => Ok(Self {
+        match (id, difficulty, fastest_time, score) {
+            (Ok(id), Ok(difficulty), Ok(fastest_time), Ok(score)) => Ok(Self {
                 id,
                 difficulty,
-                time,
+                fastest_time,
                 score,
             }),
-            (id, difficulty, time, score) => {
-                vec![id.err(), difficulty.err(), time.err(), score.err()]
+            (id, difficulty, fastest_time, score) => {
+                vec![id.err(), difficulty.err(), fastest_time.err(), score.err()]
                     .into_iter()
                     .flatten()
                     .collect::<Vec<Error>>()
@@ -357,7 +341,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(0),
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:15:53)),
+                fastest_time: FastestTime::new(time!(00:15:53)),
                 score: Some(23520),
             })
         );
@@ -367,7 +351,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(1),
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(01:27:34)),
+                fastest_time: FastestTime::new(time!(01:27:34)),
                 score: None,
             })
         );
@@ -377,7 +361,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(2),
                 difficulty: Some(Difficulty::Normal),
-                time: Some(time!(00:39:03)),
+                fastest_time: FastestTime::new(time!(00:39:03)),
                 score: Some(6974),
             })
         );
@@ -387,7 +371,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(3),
                 difficulty: Some(Difficulty::Normal),
-                time: Some(time!(00:20:47)),
+                fastest_time: FastestTime::new(time!(00:20:47)),
                 score: Some(8204),
             })
         );
@@ -397,7 +381,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(4),
                 difficulty: Some(Difficulty::Normal),
-                time: Some(time!(00:44:50)),
+                fastest_time: FastestTime::new(time!(00:44:50)),
                 score: Some(10301),
             })
         );
@@ -407,7 +391,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(5),
                 difficulty: Some(Difficulty::Normal),
-                time: Some(time!(00:18:56)),
+                fastest_time: FastestTime::new(time!(00:18:56)),
                 score: Some(3601),
             })
         );
@@ -417,7 +401,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(6),
                 difficulty: Some(Difficulty::Normal),
-                time: Some(time!(00:41:19)),
+                fastest_time: FastestTime::new(time!(00:41:19)),
                 score: Some(11838),
             })
         );
@@ -427,7 +411,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(7),
                 difficulty: None,
-                time: None,
+                fastest_time: FastestTime::empty(),
                 score: None
             })
         );
@@ -437,7 +421,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(8),
                 difficulty: None,
-                time: None,
+                fastest_time: FastestTime::empty(),
                 score: None,
             })
         );
@@ -447,7 +431,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(9),
                 difficulty: Some(Difficulty::Normal),
-                time: Some(time!(00:39:46)),
+                fastest_time: FastestTime::new(time!(00:39:46)),
                 score: Some(3319),
             })
         );
@@ -469,7 +453,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(0),
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:13:35)),
+                fastest_time: FastestTime::new(time!(00:13:35)),
                 score: Some(19147),
             })
         );
@@ -479,7 +463,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(1),
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:35:13)),
+                fastest_time: FastestTime::new(time!(00:35:13)),
                 score: Some(7953),
             })
         );
@@ -489,7 +473,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(2),
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:42:42)),
+                fastest_time: FastestTime::new(time!(00:42:42)),
                 score: Some(23553),
             })
         );
@@ -499,7 +483,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(3),
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:27:46)),
+                fastest_time: FastestTime::new(time!(00:27:46)),
                 score: Some(17378),
             })
         );
@@ -509,7 +493,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(4),
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:23:57)),
+                fastest_time: FastestTime::new(time!(00:23:57)),
                 score: None,
             })
         );
@@ -519,7 +503,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(5),
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:29:31)),
+                fastest_time: FastestTime::new(time!(00:29:31)),
                 score: Some(11021),
             })
         );
@@ -529,7 +513,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(6),
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:59:24)),
+                fastest_time: FastestTime::new(time!(00:59:24)),
                 score: Some(44636),
             })
         );
@@ -539,7 +523,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(7),
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:57:49)),
+                fastest_time: FastestTime::new(time!(00:57:49)),
                 score: Some(12172),
             })
         );
@@ -549,7 +533,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(8),
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:50:27)),
+                fastest_time: FastestTime::new(time!(00:50:27)),
                 score: Some(16359),
             })
         );
@@ -559,7 +543,7 @@ mod get_service_record_response_test {
             Some(&GetServiceRecordResponseMission {
                 id: MissionId::new(9),
                 difficulty: Some(Difficulty::Legendary),
-                time: Some(time!(00:40:42)),
+                fastest_time: FastestTime::new(time!(00:40:42)),
                 score: Some(21823),
             })
         );
@@ -592,15 +576,15 @@ impl Into<Vec<ServiceRecord>> for PlayerWithGetServiceRecordResponse {
                 let missions_id_delta = r.game().missions_id_delta();
                 let campaign_mode = r.campaign_mode();
 
-                r.missions()
-                    .into_iter()
-                    .filter_map(move |m| match (m.difficulty(), m.time()) {
+                r.missions().into_iter().filter_map(move |m| {
+                    match (m.difficulty(), m.fastest_time().value()) {
                         (Some(difficulty), Some(time)) => Some((
                             (game_id, missions_id_delta + m.id().value()),
                             (campaign_mode, difficulty, time, m.score().unwrap_or(0)),
                         )),
                         _ => None,
-                    })
+                    }
+                })
             })
             .into_group_map()
             .into_iter()
