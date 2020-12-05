@@ -8,11 +8,12 @@ use std::convert::TryFrom;
 use std::result::Result;
 use std::str::FromStr;
 
-use crate::campaign_modes::campaign_mode::CampaignMode;
+use crate::campaign_modes::campaign_mode::CampaignMode as InternalCampaignMode;
 use crate::chainable::Chainable;
 use crate::difficulties::difficulty::Difficulty;
 use crate::error::{Error, HaloWaypointError};
 use crate::games::game::Game;
+use crate::halo_waypoint::models::campaign_mode::CampaignMode;
 use crate::halo_waypoint::models::fastest_time::FastestTime;
 use crate::halo_waypoint::models::highest_score::HighestScore;
 use crate::halo_waypoint::models::mission_id::MissionId;
@@ -27,11 +28,11 @@ pub struct GetServiceRecordRequest {
 }
 
 impl GetServiceRecordRequest {
-    pub fn new(player: String, game: Game, campaign_mode: CampaignMode) -> Self {
+    pub fn new(player: String, game: Game, campaign_mode: InternalCampaignMode) -> Self {
         Self {
             player,
             game,
-            campaign_mode,
+            campaign_mode: CampaignMode::from(&campaign_mode),
         }
     }
 }
@@ -168,16 +169,7 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
             })
             .and_then(Game::from_str);
 
-        let campaign_mode = Selector::parse("[data-mode-id]")
-            .unwrap()
-            .pipe(|selector| {
-                element
-                    .select(&selector)
-                    .next()
-                    .and_then(|element| element.value().attr("data-mode-id"))
-                    .ok_or_else(|| HaloWaypointError::MissingCampaignMode.into())
-            })
-            .and_then(CampaignMode::from_str);
+        let campaign_mode = CampaignMode::try_from(element);
 
         let missions = Selector::parse("[data-mission-id]")
             .unwrap()
@@ -549,7 +541,9 @@ impl Into<Vec<ServiceRecord>> for PlayerWithGetServiceRecordResponse {
             .map(|((game_id, mission_id), runs)| {
                 let runs = runs
                     .into_iter()
-                    .map(|(c, d, t, s)| ServiceRecordRun::new(c, d, t, s))
+                    .map(|(c, d, t, s)| {
+                        ServiceRecordRun::new(InternalCampaignMode::from(&c), d, t, s)
+                    })
                     .collect();
 
                 ServiceRecord::new(player.clone(), game_id, mission_id, runs)
