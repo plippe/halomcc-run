@@ -7,7 +7,6 @@ use scraper::{ElementRef, Html, Selector};
 use std::convert::TryFrom;
 use std::result::Result;
 use std::str::FromStr;
-use time::Time;
 
 use crate::campaign_modes::campaign_mode::CampaignMode;
 use crate::chainable::Chainable;
@@ -15,6 +14,7 @@ use crate::difficulties::difficulty::Difficulty;
 use crate::error::{Error, HaloWaypointError};
 use crate::games::game::Game;
 use crate::halo_waypoint::models::fastest_time::FastestTime;
+use crate::halo_waypoint::models::highest_score::HighestScore;
 use crate::halo_waypoint::models::mission_id::MissionId;
 use crate::halo_waypoint::requests::auth::GetAuthResponse;
 use crate::service_records::service_record::{ServiceRecord, ServiceRecordRun};
@@ -134,20 +134,6 @@ pub struct GetServiceRecordResponse {
     missions: Vec<GetServiceRecordResponseMission>,
 }
 
-impl GetServiceRecordResponse {
-    pub fn game(&self) -> Game {
-        self.game
-    }
-
-    pub fn campaign_mode(&self) -> CampaignMode {
-        self.campaign_mode
-    }
-
-    pub fn missions(&self) -> Vec<GetServiceRecordResponseMission> {
-        self.missions.clone()
-    }
-}
-
 impl TryFrom<Response<String>> for GetServiceRecordResponse {
     type Error = Error;
     fn try_from(res: Response<String>) -> Result<Self, Self::Error> {
@@ -225,25 +211,7 @@ pub struct GetServiceRecordResponseMission {
     id: MissionId,
     difficulty: Option<Difficulty>,
     fastest_time: FastestTime,
-    score: Option<i32>,
-}
-
-impl GetServiceRecordResponseMission {
-    pub fn id(&self) -> MissionId {
-        self.id
-    }
-
-    pub fn difficulty(&self) -> Option<Difficulty> {
-        self.difficulty
-    }
-
-    pub fn fastest_time(&self) -> FastestTime {
-        self.fastest_time
-    }
-
-    pub fn score(&self) -> Option<i32> {
-        self.score
-    }
+    highest_score: HighestScore,
 }
 
 impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
@@ -266,41 +234,26 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
             });
 
         let fastest_time = FastestTime::try_from(element);
+        let highest_score = HighestScore::try_from(element);
 
-        let score = Selector::parse(".highest-score")
-            .unwrap()
-            .pipe(|selector| {
-                element
-                    .select(&selector)
-                    .next()
-                    .ok_or(HaloWaypointError::MissingScore)
-            })
-            .and_then(|element| match element.inner_html().as_str() {
-                "--" => Ok(None),
-                html => html
-                    .parse()
-                    .map(Some)
-                    .map_err(|_| HaloWaypointError::InvalidTime {
-                        time: html.to_string(),
-                    }),
-            })
-            .map_err(|err| err.into());
-
-        match (id, difficulty, fastest_time, score) {
-            (Ok(id), Ok(difficulty), Ok(fastest_time), Ok(score)) => Ok(Self {
+        match (id, difficulty, fastest_time, highest_score) {
+            (Ok(id), Ok(difficulty), Ok(fastest_time), Ok(highest_score)) => Ok(Self {
                 id,
                 difficulty,
                 fastest_time,
-                score,
+                highest_score,
             }),
-            (id, difficulty, fastest_time, score) => {
-                vec![id.err(), difficulty.err(), fastest_time.err(), score.err()]
-                    .into_iter()
-                    .flatten()
-                    .collect::<Vec<Error>>()
-                    .pipe(|errors| Error::List { errors })
-                    .pipe(Err)
-            }
+            (id, difficulty, fastest_time, highest_score) => vec![
+                id.err(),
+                difficulty.err(),
+                fastest_time.err(),
+                highest_score.err(),
+            ]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<Error>>()
+            .pipe(|errors| Error::List { errors })
+            .pipe(Err),
         }
     }
 }
@@ -342,7 +295,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(0),
                 difficulty: Some(Difficulty::Legendary),
                 fastest_time: FastestTime::new(time!(00:15:53)),
-                score: Some(23520),
+                highest_score: HighestScore::new(23520),
             })
         );
 
@@ -352,7 +305,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(1),
                 difficulty: Some(Difficulty::Legendary),
                 fastest_time: FastestTime::new(time!(01:27:34)),
-                score: None,
+                highest_score: HighestScore::empty(),
             })
         );
 
@@ -362,7 +315,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(2),
                 difficulty: Some(Difficulty::Normal),
                 fastest_time: FastestTime::new(time!(00:39:03)),
-                score: Some(6974),
+                highest_score: HighestScore::new(6974),
             })
         );
 
@@ -372,7 +325,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(3),
                 difficulty: Some(Difficulty::Normal),
                 fastest_time: FastestTime::new(time!(00:20:47)),
-                score: Some(8204),
+                highest_score: HighestScore::new(8204),
             })
         );
 
@@ -382,7 +335,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(4),
                 difficulty: Some(Difficulty::Normal),
                 fastest_time: FastestTime::new(time!(00:44:50)),
-                score: Some(10301),
+                highest_score: HighestScore::new(10301),
             })
         );
 
@@ -392,7 +345,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(5),
                 difficulty: Some(Difficulty::Normal),
                 fastest_time: FastestTime::new(time!(00:18:56)),
-                score: Some(3601),
+                highest_score: HighestScore::new(3601),
             })
         );
 
@@ -402,7 +355,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(6),
                 difficulty: Some(Difficulty::Normal),
                 fastest_time: FastestTime::new(time!(00:41:19)),
-                score: Some(11838),
+                highest_score: HighestScore::new(11838),
             })
         );
 
@@ -412,7 +365,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(7),
                 difficulty: None,
                 fastest_time: FastestTime::empty(),
-                score: None
+                highest_score: HighestScore::empty()
             })
         );
 
@@ -422,7 +375,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(8),
                 difficulty: None,
                 fastest_time: FastestTime::empty(),
-                score: None,
+                highest_score: HighestScore::empty(),
             })
         );
 
@@ -432,7 +385,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(9),
                 difficulty: Some(Difficulty::Normal),
                 fastest_time: FastestTime::new(time!(00:39:46)),
-                score: Some(3319),
+                highest_score: HighestScore::new(3319),
             })
         );
 
@@ -454,7 +407,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(0),
                 difficulty: Some(Difficulty::Legendary),
                 fastest_time: FastestTime::new(time!(00:13:35)),
-                score: Some(19147),
+                highest_score: HighestScore::new(19147),
             })
         );
 
@@ -464,7 +417,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(1),
                 difficulty: Some(Difficulty::Legendary),
                 fastest_time: FastestTime::new(time!(00:35:13)),
-                score: Some(7953),
+                highest_score: HighestScore::new(7953),
             })
         );
 
@@ -474,7 +427,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(2),
                 difficulty: Some(Difficulty::Legendary),
                 fastest_time: FastestTime::new(time!(00:42:42)),
-                score: Some(23553),
+                highest_score: HighestScore::new(23553),
             })
         );
 
@@ -484,7 +437,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(3),
                 difficulty: Some(Difficulty::Legendary),
                 fastest_time: FastestTime::new(time!(00:27:46)),
-                score: Some(17378),
+                highest_score: HighestScore::new(17378),
             })
         );
 
@@ -494,7 +447,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(4),
                 difficulty: Some(Difficulty::Legendary),
                 fastest_time: FastestTime::new(time!(00:23:57)),
-                score: None,
+                highest_score: HighestScore::empty(),
             })
         );
 
@@ -504,7 +457,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(5),
                 difficulty: Some(Difficulty::Legendary),
                 fastest_time: FastestTime::new(time!(00:29:31)),
-                score: Some(11021),
+                highest_score: HighestScore::new(11021),
             })
         );
 
@@ -514,7 +467,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(6),
                 difficulty: Some(Difficulty::Legendary),
                 fastest_time: FastestTime::new(time!(00:59:24)),
-                score: Some(44636),
+                highest_score: HighestScore::new(44636),
             })
         );
 
@@ -524,7 +477,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(7),
                 difficulty: Some(Difficulty::Legendary),
                 fastest_time: FastestTime::new(time!(00:57:49)),
-                score: Some(12172),
+                highest_score: HighestScore::new(12172),
             })
         );
 
@@ -534,7 +487,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(8),
                 difficulty: Some(Difficulty::Legendary),
                 fastest_time: FastestTime::new(time!(00:50:27)),
-                score: Some(16359),
+                highest_score: HighestScore::new(16359),
             })
         );
 
@@ -544,7 +497,7 @@ mod get_service_record_response_test {
                 id: MissionId::new(9),
                 difficulty: Some(Difficulty::Legendary),
                 fastest_time: FastestTime::new(time!(00:40:42)),
-                score: Some(21823),
+                highest_score: HighestScore::new(21823),
             })
         );
 
@@ -572,15 +525,20 @@ impl Into<Vec<ServiceRecord>> for PlayerWithGetServiceRecordResponse {
         self.responses
             .into_iter()
             .flat_map(|r| {
-                let game_id = r.game().id();
-                let missions_id_delta = r.game().missions_id_delta();
-                let campaign_mode = r.campaign_mode();
+                let game_id = r.game.id();
+                let missions_id_delta = r.game.missions_id_delta();
+                let campaign_mode = r.campaign_mode;
 
-                r.missions().into_iter().filter_map(move |m| {
-                    match (m.difficulty(), m.fastest_time().value()) {
+                r.missions.into_iter().filter_map(move |m| {
+                    match (m.difficulty, m.fastest_time.value()) {
                         (Some(difficulty), Some(time)) => Some((
-                            (game_id, missions_id_delta + m.id().value()),
-                            (campaign_mode, difficulty, time, m.score().unwrap_or(0)),
+                            (game_id, missions_id_delta + m.id.value()),
+                            (
+                                campaign_mode,
+                                difficulty,
+                                time,
+                                m.highest_score.value().unwrap_or(0),
+                            ),
                         )),
                         _ => None,
                     }
