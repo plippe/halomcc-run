@@ -25,7 +25,7 @@ pub enum HaloWaypointError {
     },
     MissingScore,
     InvalidScore {
-        time: String,
+        score: String,
     },
 }
 
