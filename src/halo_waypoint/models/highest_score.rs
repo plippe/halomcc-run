@@ -5,20 +5,9 @@ use std::result::Result;
 use crate::error::{Error, HaloWaypointError};
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-pub struct HighestScore(Option<i32>);
-
-impl HighestScore {
-    pub fn new(highest_score: i32) -> HighestScore {
-        HighestScore(Some(highest_score))
-    }
-
-    pub fn empty() -> HighestScore {
-        HighestScore(None)
-    }
-
-    pub fn value(&self) -> Option<i32> {
-        self.0
-    }
+pub enum HighestScore {
+    Some(i32),
+    None,
 }
 
 impl<'a> TryFrom<ElementRef<'a>> for HighestScore {
@@ -31,13 +20,22 @@ impl<'a> TryFrom<ElementRef<'a>> for HighestScore {
             .next()
             .ok_or(HaloWaypointError::MissingScore)
             .and_then(|element| match element.inner_html().as_str() {
-                "--" => Ok(HighestScore::empty()),
-                html => html.parse().map(HighestScore::new).map_err(|_| {
+                "--" => Ok(HighestScore::None),
+                html => html.parse().map(HighestScore::Some).map_err(|_| {
                     HaloWaypointError::InvalidScore {
                         score: html.to_string(),
                     }
                 }),
             })
             .map_err(|err| err.into())
+    }
+}
+
+impl From<&HighestScore> for Option<i32> {
+    fn from(highest_score: &HighestScore) -> Self {
+        match highest_score {
+            HighestScore::Some(highest_score) => Some(*highest_score),
+            HighestScore::None => None,
+        }
     }
 }

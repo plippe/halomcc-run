@@ -6,20 +6,9 @@ use time::Time;
 use crate::error::{Error, HaloWaypointError};
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-pub struct FastestTime(Option<Time>);
-
-impl FastestTime {
-    pub fn new(fastest_time: Time) -> FastestTime {
-        FastestTime(Some(fastest_time))
-    }
-
-    pub fn empty() -> FastestTime {
-        FastestTime(None)
-    }
-
-    pub fn value(&self) -> Option<Time> {
-        self.0
-    }
+pub enum FastestTime {
+    Some(Time),
+    None,
 }
 
 impl<'a> TryFrom<ElementRef<'a>> for FastestTime {
@@ -32,13 +21,22 @@ impl<'a> TryFrom<ElementRef<'a>> for FastestTime {
             .next()
             .ok_or(HaloWaypointError::MissingTime)
             .and_then(|element| match element.inner_html().as_str() {
-                "--" => Ok(FastestTime::empty()),
-                html => Time::parse(html, "%T").map(FastestTime::new).map_err(|_| {
+                "--" => Ok(FastestTime::None),
+                html => Time::parse(html, "%T").map(FastestTime::Some).map_err(|_| {
                     HaloWaypointError::InvalidTime {
                         time: html.to_string(),
                     }
                 }),
             })
             .map_err(|err| err.into())
+    }
+}
+
+impl From<&FastestTime> for Option<Time> {
+    fn from(fastest_time: &FastestTime) -> Self {
+        match fastest_time {
+            FastestTime::Some(time) => Some(*time),
+            FastestTime::None => None,
+        }
     }
 }
