@@ -7,15 +7,15 @@ use scraper::{ElementRef, Html, Selector};
 use std::borrow::Borrow;
 use std::convert::TryFrom;
 use std::result::Result;
-use std::str::FromStr;
 
 use crate::campaign_modes::campaign_mode::CampaignMode as InternalCampaignMode;
 use crate::chainable::Chainable;
 use crate::error::{Error, HaloWaypointError};
-use crate::games::game::Game;
+use crate::games::game::Game as InternalGame;
 use crate::halo_waypoint::models::campaign_mode::CampaignMode;
 use crate::halo_waypoint::models::difficulty::Difficulty;
 use crate::halo_waypoint::models::fastest_time::FastestTime;
+use crate::halo_waypoint::models::game::Game;
 use crate::halo_waypoint::models::highest_score::HighestScore;
 use crate::halo_waypoint::models::mission_id::MissionId;
 use crate::halo_waypoint::requests::auth::GetAuthResponse;
@@ -29,10 +29,10 @@ pub struct GetServiceRecordRequest {
 }
 
 impl GetServiceRecordRequest {
-    pub fn new(player: String, game: Game, campaign_mode: InternalCampaignMode) -> Self {
+    pub fn new(player: String, game: InternalGame, campaign_mode: InternalCampaignMode) -> Self {
         Self {
             player,
-            game,
+            game: Game::from(&game),
             campaign_mode: CampaignMode::from(&campaign_mode),
         }
     }
@@ -159,17 +159,7 @@ impl TryFrom<Html> for GetServiceRecordResponse {
 impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
     type Error = Error;
     fn try_from(element: ElementRef) -> Result<Self, Self::Error> {
-        let game = Selector::parse("[data-game-id]")
-            .unwrap()
-            .pipe(|selector| {
-                element
-                    .select(&selector)
-                    .next()
-                    .and_then(|element| element.value().attr("data-game-id"))
-                    .ok_or_else(|| HaloWaypointError::MissingGame.into())
-            })
-            .and_then(Game::from_str);
-
+        let game = Game::try_from(element);
         let campaign_mode = CampaignMode::try_from(element);
 
         let missions = Selector::parse("[data-mission-id]")
@@ -504,16 +494,16 @@ impl Into<Vec<ServiceRecord>> for PlayerWithGetServiceRecordResponse {
         self.responses
             .into_iter()
             .flat_map(|r| {
-                let game_id = r.game.id();
+                let game_id = InternalGame::from(&r.game).id();
                 let missions_id_delta = r.game.missions_id_delta();
-                let campaign_mode = r.campaign_mode;
+                let campaign_mode = InternalCampaignMode::from(&r.campaign_mode);
 
                 r.missions.into_iter().filter_map(move |m| {
                     match (m.difficulty.borrow().into(), m.fastest_time.borrow().into()) {
                         (Some(difficulty), Some(time)) => Some((
                             (game_id, missions_id_delta + m.id.value()),
                             (
-                                Into::<InternalCampaignMode>::into(&campaign_mode),
+                                campaign_mode,
                                 difficulty,
                                 time,
                                 Into::<Option<i32>>::into(&m.highest_score).unwrap_or(0 as i32),
