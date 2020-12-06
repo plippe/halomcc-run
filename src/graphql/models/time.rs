@@ -8,11 +8,9 @@ impl Time {
         let minutes = hours * 60 + self.0.minute() as i32;
         minutes * 60 + self.0.second() as i32
     }
-}
 
-impl From<time::Time> for Time {
-    fn from(time: time::Time) -> Time {
-        Time(time)
+    pub fn from_time(time: &time::Time) -> Self {
+        Self(*time)
     }
 }
 
@@ -41,7 +39,7 @@ where
         Value::scalar(self.seconds())
     }
 
-    fn from_input_value(_v: &InputValue) -> Option<Time> {
+    fn from_input_value(_v: &InputValue) -> Option<Self> {
         unimplemented!();
     }
 

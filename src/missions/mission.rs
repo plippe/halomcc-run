@@ -19,61 +19,57 @@ pub enum Mission {
 }
 
 impl Mission {
-    pub fn iter() -> impl Iterator<Item = Mission> {
-        fn missions<Enum: IntoEnumIterator + Into<Mission>>() -> Vec<Mission> {
-            Enum::iter().map(Into::into).collect()
-        }
-
+    #[rustfmt::skip]
+    pub fn iter() -> impl Iterator<Item = Self> {
         [
-            missions::<halo::HaloMission>(),
-            missions::<halo_2::Halo2Mission>(),
-            missions::<halo_3::Halo3Mission>(),
-            missions::<halo_3_odst::Halo3OdstMission>(),
-            missions::<halo_reach::HaloReachMission>(),
-            missions::<halo_4::Halo4Mission>(),
+            halo::HaloMission::iter().map(|m| m.to_mission()).collect::<Vec<Self>>(),
+            halo_2::Halo2Mission::iter().map(|m| m.to_mission()).collect::<Vec<Self>>(),
+            halo_3::Halo3Mission::iter().map(|m| m.to_mission()).collect::<Vec<Self>>(),
+            halo_3_odst::Halo3OdstMission::iter().map(|m| m.to_mission()).collect::<Vec<Self>>(),
+            halo_reach::HaloReachMission::iter().map(|m| m.to_mission()).collect::<Vec<Self>>(),
+            halo_4::Halo4Mission::iter().map(|m| m.to_mission()).collect::<Vec<Self>>(),
         ]
         .concat()
         .into_iter()
     }
 
-    pub fn game_id(self) -> i32 {
-        MissionProperties::from(self).game_id
+    pub fn game_id(&self) -> i32 {
+        self.to_properties().game_id
     }
 
-    pub fn id(self) -> i32 {
-        MissionProperties::from(self).id
+    pub fn id(&self) -> i32 {
+        self.to_properties().id
     }
 
-    pub fn name(self) -> String {
-        MissionProperties::from(self).name
+    pub fn name(&self) -> String {
+        self.to_properties().name
     }
 
-    pub fn par_time(self) -> Option<Time> {
-        MissionProperties::from(self).par_time
+    pub fn par_time(&self) -> Option<Time> {
+        self.to_properties().par_time
     }
 
-    pub fn par_score(self) -> Option<i32> {
-        MissionProperties::from(self).par_score
+    pub fn par_score(&self) -> Option<i32> {
+        self.to_properties().par_score
+    }
+
+    #[rustfmt::skip]
+    fn to_properties(&self) -> MissionProperties {
+        match self {
+            Self::Halo(mission) => mission.to_properties(),
+            Self::Halo2(mission) => mission.to_properties(),
+            Self::Halo3(mission) => mission.to_properties(),
+            Self::Halo3Odst(mission) => mission.to_properties(),
+            Self::HaloReach(mission) => mission.to_properties(),
+            Self::Halo4(mission) => mission.to_properties(),
+        }
     }
 }
 
-struct MissionProperties {
+pub struct MissionProperties {
     game_id: i32,
     id: i32,
     name: String,
     par_time: Option<Time>,
     par_score: Option<i32>,
-}
-
-impl From<Mission> for MissionProperties {
-    fn from(mission: Mission) -> Self {
-        match mission {
-            Mission::Halo(mission) => MissionProperties::from(mission),
-            Mission::Halo2(mission) => MissionProperties::from(mission),
-            Mission::Halo3(mission) => MissionProperties::from(mission),
-            Mission::Halo3Odst(mission) => MissionProperties::from(mission),
-            Mission::HaloReach(mission) => MissionProperties::from(mission),
-            Mission::Halo4(mission) => MissionProperties::from(mission),
-        }
-    }
 }

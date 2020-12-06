@@ -42,7 +42,7 @@ impl HyperClient {
             HeaderValue::from_static("halomcc.run/0.1"),
         );
 
-        let res = self.client.request(req).await?;
+        let res = self.client.request(req).await.map_err(Error::from_hyper)?;
         let res_without_body = res
             .headers()
             .into_iter()
@@ -52,34 +52,32 @@ impl HyperClient {
             .status(res.status());
 
         let body = hyper::body::to_bytes(res)
-            .await?
+            .await
+            .map_err(Error::from_hyper)?
             .to_vec()
             .pipe(String::from_utf8)
             .unwrap();
 
         res_without_body.body(body).unwrap().try_into()
     }
-}
 
-impl Default for HyperClient {
     fn default() -> Self {
         let https = hyper_tls::HttpsConnector::new();
         let client = hyper::Client::builder().build(https);
 
-        HyperClient { client }
+        Self { client }
     }
 }
 
 #[async_trait]
 impl Client for HyperClient {
     async fn get_auth(&self, req: &GetAuthRequest) -> Result<GetAuthResponse, Error> {
-        let res = self.request(&GetAuthRequestLoginFormRequest).await?;
-        let req = GetAuthRequestLoginRequest::from((req, &res));
-        let res = self.request(&req).await?;
-        let req = GetAuthRequestRedirectRequest::from(&res);
-        let res = self.request(&req).await?;
+        let res: GetAuthRequestForm = self.request(&GetAuthRequestGetForm).await?;
+        let req: GetAuthRequestPostForm = GetAuthRequestPostForm::new(&req, &res);
+        let req: GetAuthRequestRedirect = self.request(&req).await?;
+        let res: GetAuthResponse = self.request(&req).await?;
 
-        Ok(GetAuthResponse::from(&res))
+        Ok(res)
     }
 
     async fn get_service_record(
@@ -87,7 +85,7 @@ impl Client for HyperClient {
         auth: &GetAuthResponse,
         req: &GetServiceRecordRequest,
     ) -> Result<GetServiceRecordResponse, Error> {
-        let req = GetServiceRecordRequestAuthenticated::from((auth, req));
+        let req = AuthenticatedGetServiceRecord::new(auth.clone(), req.clone());
         self.request(&req).await
     }
 }
@@ -140,10 +138,7 @@ impl<A: Client> InMemoryCacheClient<A> {
 
 impl Default for InMemoryCacheClient<HyperClient> {
     fn default() -> Self {
-        let https = hyper_tls::HttpsConnector::new();
-        let client = hyper::Client::builder()
-            .build(https)
-            .pipe(|client| HyperClient { client });
+        let client = HyperClient::default();
 
         let auth_cache = RwLock::new(TtlCache::new(10));
         let auth_cache_ttl = Duration::from_secs(14400);
@@ -212,7 +207,7 @@ mod hyper_client_tests {
         let auth = HyperClient::default().get_auth(&req).await.unwrap();
 
         let req =
-            GetServiceRecordRequest::new("John117".to_string(), Game::Halo, CampaignMode::Solo);
+            GetServiceRecordRequest::from_internal("John117", &Game::Halo, &CampaignMode::Solo);
 
         let res = HyperClient::default().get_service_record(&auth, &req).await;
 

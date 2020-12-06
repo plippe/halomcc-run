@@ -20,11 +20,9 @@ impl Context {
     pub fn service_records_doa(&self) -> &ServiceRecordsDao {
         &self.service_records_doa
     }
-}
 
-impl Default for Context {
-    fn default() -> Self {
-        Context {
+    pub fn default() -> Self {
+        Self {
             games_dao: GamesDao::default(),
             missions_dao: MissionsDao::default(),
             service_records_doa: ServiceRecordsDao::default(),

@@ -1,5 +1,4 @@
 use scraper::ElementRef;
-use std::convert::TryFrom;
 use std::result::Result;
 
 use crate::error::{Error, HaloWaypointError};
@@ -12,14 +11,7 @@ impl MissionId {
         Self(mission)
     }
 
-    pub fn value(&self) -> i32 {
-        self.0
-    }
-}
-
-impl<'a> TryFrom<ElementRef<'a>> for MissionId {
-    type Error = Error;
-    fn try_from(element: ElementRef) -> Result<Self, Self::Error> {
+    pub fn try_from_halo_waypoint_service_record(element: ElementRef) -> Result<Self, Error> {
         element
             .value()
             .attr("data-mission-id")
@@ -27,11 +19,13 @@ impl<'a> TryFrom<ElementRef<'a>> for MissionId {
             .and_then(|attribute| {
                 attribute
                     .parse()
-                    .map_err(|_| HaloWaypointError::InvalidMissionId {
-                        mission_id: attribute.to_string(),
-                    })
+                    .map_err(|_| HaloWaypointError::InvalidMissionId(attribute.to_string()))
             })
             .map(Self::new)
-            .map_err(|err| err.into())
+            .map_err(Error::HaloWaypoint)
+    }
+
+    pub fn to_internal(&self) -> i32 {
+        self.0
     }
 }

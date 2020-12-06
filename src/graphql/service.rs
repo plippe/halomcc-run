@@ -23,11 +23,9 @@ impl Service {
     pub async fn graphql(&self, req: Request<Body>) -> Result<Response<Body>, hyper::error::Error> {
         juniper_hyper::graphql(self.root_node.clone(), self.context.clone(), req).await
     }
-}
 
-impl Default for Service {
-    fn default() -> Service {
-        Service {
+    pub fn default() -> Self {
+        Self {
             context: Arc::new(Context::default()),
             root_node: Arc::new(RootNode::new(
                 Query,

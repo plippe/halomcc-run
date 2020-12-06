@@ -48,7 +48,7 @@ impl ServiceRecordRun {
     }
 
     fn time_in_seconds(&self) -> Time {
-        self.time().into()
+        Time::from_time(&self.time())
     }
 
     fn score(&self) -> i32 {

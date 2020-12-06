@@ -19,27 +19,25 @@ pub enum Halo3Mission {
     Epilogue,
 }
 
-impl From<Halo3Mission> for Mission {
-    fn from(mission: Halo3Mission) -> Self {
-        Self::Halo3(mission)
+impl Halo3Mission {
+    pub fn to_mission(&self) -> Mission {
+        Mission::Halo3(*self)
     }
-}
 
-impl From<Halo3Mission> for MissionProperties {
     #[rustfmt::skip]
-    fn from(mission: Halo3Mission) -> Self {
-        match mission {
-            Halo3Mission::Arrival => MissionProperties { game_id: Game::Halo3.id(), id: 1, name: "Arrival".to_string(), par_time: None, par_score: None },
-            Halo3Mission::SierraOneOneSeven => MissionProperties { game_id: Game::Halo3.id(), id: 2, name: "Sierra 117".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(13_000) },
-            Halo3Mission::CrowsNest => MissionProperties { game_id: Game::Halo3.id(), id: 3, name: "Crow’s Nest".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(19_000) },
-            Halo3Mission::TvasoHighway => MissionProperties { game_id: Game::Halo3.id(), id: 4, name: "Tvaso Highway".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(21_000) },
-            Halo3Mission::TheStorm => MissionProperties { game_id: Game::Halo3.id(), id: 5, name: "The Storm".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(15_000) },
-            Halo3Mission::Floodgate => MissionProperties { game_id: Game::Halo3.id(), id: 6, name: "Floodgate".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(25_000) },
-            Halo3Mission::TheArk => MissionProperties { game_id: Game::Halo3.id(), id: 7, name: "The Ark".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(25_000) },
-            Halo3Mission::TheCovenant => MissionProperties { game_id: Game::Halo3.id(), id: 8, name: "The Covenant".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(25_000) },
-            Halo3Mission::Cortana => MissionProperties { game_id: Game::Halo3.id(), id: 9, name: "Cortana".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(17_000) },
-            Halo3Mission::Halo => MissionProperties { game_id: Game::Halo3.id(), id: 10, name: "Halo".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(24_000) },
-            Halo3Mission::Epilogue => MissionProperties { game_id: Game::Halo3.id(), id: 11, name: "Epilogue".to_string(), par_time: None, par_score: None },
+    pub fn to_properties(&self) -> MissionProperties {
+        match self {
+            Self::Arrival => MissionProperties { game_id: Game::Halo3.id(), id: 1, name: "Arrival".to_string(), par_time: None, par_score: None },
+            Self::SierraOneOneSeven => MissionProperties { game_id: Game::Halo3.id(), id: 2, name: "Sierra 117".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(13_000) },
+            Self::CrowsNest => MissionProperties { game_id: Game::Halo3.id(), id: 3, name: "Crow’s Nest".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(19_000) },
+            Self::TvasoHighway => MissionProperties { game_id: Game::Halo3.id(), id: 4, name: "Tvaso Highway".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(21_000) },
+            Self::TheStorm => MissionProperties { game_id: Game::Halo3.id(), id: 5, name: "The Storm".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(15_000) },
+            Self::Floodgate => MissionProperties { game_id: Game::Halo3.id(), id: 6, name: "Floodgate".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(25_000) },
+            Self::TheArk => MissionProperties { game_id: Game::Halo3.id(), id: 7, name: "The Ark".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(25_000) },
+            Self::TheCovenant => MissionProperties { game_id: Game::Halo3.id(), id: 8, name: "The Covenant".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(25_000) },
+            Self::Cortana => MissionProperties { game_id: Game::Halo3.id(), id: 9, name: "Cortana".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(17_000) },
+            Self::Halo => MissionProperties { game_id: Game::Halo3.id(), id: 10, name: "Halo".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(24_000) },
+            Self::Epilogue => MissionProperties { game_id: Game::Halo3.id(), id: 11, name: "Epilogue".to_string(), par_time: None, par_score: None },
         }
     }
 }

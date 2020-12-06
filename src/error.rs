@@ -1,49 +1,29 @@
 #[derive(Debug, Clone)]
-pub enum HaloWaypointError {
-    Http {
-        /*parts: http::response::Parts,*/ body: String,
-    },
-    MissingGame,
-    UnknownGame {
-        game: String,
-    },
-    MissingMissionId,
-    InvalidMissionId {
-        mission_id: String,
-    },
-    MissingDifficulty,
-    UnknownDifficulty {
-        difficulty: String,
-    },
-    MissingCampaignMode,
-    UnknownCampaignMode {
-        campaign_mode: String,
-    },
-    MissingTime,
-    InvalidTime {
-        time: String,
-    },
-    MissingScore,
-    InvalidScore {
-        score: String,
-    },
-}
-
-#[derive(Debug, Clone)]
 pub enum Error {
     Hyper(String),
     HaloWaypoint(HaloWaypointError),
-    List { errors: Vec<Error> },
+    List(Vec<Error>),
 }
 
-impl From<hyper::Error> for Error {
-    fn from(err: hyper::Error) -> Self {
-        Error::Hyper(format!("{:?}", err))
+impl Error {
+    pub fn from_hyper(err: hyper::Error) -> Self {
+        Self::Hyper(format!("{:?}", err))
     }
 }
 
-impl From<HaloWaypointError> for Error {
-    fn from(err: HaloWaypointError) -> Self {
-        Error::HaloWaypoint(err)
-    }
+#[derive(Debug, Clone)]
+pub enum HaloWaypointError {
+    Http(/* http::response::Parts, */ String),
+    MissingGame,
+    UnknownGame(String),
+    MissingMissionId,
+    InvalidMissionId(String),
+    MissingDifficulty,
+    UnknownDifficulty(String),
+    MissingCampaignMode,
+    UnknownCampaignMode(String),
+    MissingTime,
+    InvalidTime(String),
+    MissingScore,
+    InvalidScore(String),
 }
