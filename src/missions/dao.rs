@@ -12,10 +12,8 @@ impl MissionsDao {
     pub fn find_by_game_id_and_id(&self, game_id: i32, id: i32) -> Option<Mission> {
         Mission::iter().find(|mission| mission.game_id() == game_id && mission.id() == id)
     }
-}
 
-impl Default for MissionsDao {
-    fn default() -> Self {
-        MissionsDao
+    pub fn default() -> Self {
+        Self
     }
 }

@@ -18,7 +18,7 @@ impl Mission {
     // TODO: GraphQL shouldn't require explicit conversions
     fn par_time_in_seconds(&self) -> Option<i32> {
         self.par_time()
-            .map(|par_time| Time::from(par_time).seconds())
+            .map(|par_time| Time::from_time(&par_time).seconds())
     }
 
     fn par_score(&self) -> Option<i32> {

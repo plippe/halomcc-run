@@ -1,14 +1,16 @@
 use futures::future::join_all;
+use time::Time;
 
 use crate::campaign_modes::campaign_mode::CampaignMode;
 use crate::chainable::Chainable;
+use crate::difficulties::difficulty::Difficulty;
 use crate::error::Error;
 use crate::games::dao::GamesDao;
 use crate::games::game::Game;
 use crate::halo_waypoint::client::{Client, HyperClient, InMemoryCacheClient};
 use crate::halo_waypoint::requests::auth::GetAuthRequest;
 use crate::halo_waypoint::requests::service_record::{
-    GetServiceRecordRequest, GetServiceRecordResponse, PlayerWithGetServiceRecordResponse,
+    GetServiceRecordRequest, GetServiceRecordResponse,
 };
 use crate::missions::mission::Mission;
 use crate::service_records::service_record::ServiceRecord;
@@ -36,7 +38,8 @@ impl ServiceRecordsDao {
             .into_iter()
             .map(|campaign_mode| {
                 let auth = auth.clone();
-                let req = GetServiceRecordRequest::new(player.clone(), game, campaign_mode);
+                let req =
+                    GetServiceRecordRequest::from_internal(player.as_str(), &game, &campaign_mode);
 
                 async move { self.halo_waypoint.get_service_record(&auth, &req).await }
             })
@@ -44,7 +47,12 @@ impl ServiceRecordsDao {
             .await
             .into_iter()
             .collect::<Result<Vec<GetServiceRecordResponse>, Error>>()
-            .map(|res| PlayerWithGetServiceRecordResponse::from((player.clone(), res)).into())
+            .map(|res| {
+                res.iter()
+                    .flat_map(GetServiceRecordResponse::to_internal)
+                    .collect::<Vec<(i32, i32, CampaignMode, Difficulty, Time, i32)>>()
+                    .pipe(|runs| ServiceRecord::from_player_and_runs(&player, &runs))
+            })
             .map_err(|err| eprintln!("{:?}", err))
             .ok()
     }
@@ -73,11 +81,9 @@ impl ServiceRecordsDao {
                 })
             })
     }
-}
 
-impl Default for ServiceRecordsDao {
-    fn default() -> Self {
-        ServiceRecordsDao {
+    pub fn default() -> Self {
+        Self {
             games_dao: GamesDao::default(),
             halo_waypoint: InMemoryCacheClient::default(),
         }

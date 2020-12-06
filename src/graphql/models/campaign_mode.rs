@@ -10,14 +10,14 @@ where
     // Define how to convert your custom scalar into a primitive type.
     fn resolve(&self) -> Value {
         let value = match self {
-            CampaignMode::Solo => "solo",
-            CampaignMode::Coop => "coop",
+            Self::Solo => "solo",
+            Self::Coop => "coop",
         };
 
         Value::scalar(value.to_string())
     }
 
-    fn from_input_value(_v: &InputValue) -> Option<CampaignMode> {
+    fn from_input_value(_v: &InputValue) -> Option<Self> {
         unimplemented!();
     }
 

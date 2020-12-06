@@ -12,10 +12,8 @@ impl GamesDao {
     pub fn find_by_id(&self, id: i32) -> Option<Game> {
         self.all().into_iter().find(|game| game.id() == id)
     }
-}
 
-impl Default for GamesDao {
-    fn default() -> Self {
+    pub fn default() -> Self {
         GamesDao
     }
 }

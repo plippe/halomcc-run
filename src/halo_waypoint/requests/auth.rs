@@ -8,16 +8,17 @@ use std::convert::TryFrom;
 use std::env;
 use std::result::Result;
 
+use crate::chainable::Chainable;
 use crate::error::{Error, HaloWaypointError};
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct GetAuthRequest {
     login: String,
     password: String,
 }
 
-impl Default for GetAuthRequest {
-    fn default() -> Self {
+impl GetAuthRequest {
+    pub fn default() -> Self {
         let login = env::var("HALO_WAYPOINT_LOGIN")
             .expect("Environment variable not found: HALO_WAYPOINT_LOGIN");
 
@@ -28,10 +29,10 @@ impl Default for GetAuthRequest {
     }
 }
 
-pub struct GetAuthRequestLoginFormRequest;
+pub struct GetAuthRequestGetForm;
 
-impl From<&GetAuthRequestLoginFormRequest> for Request<Body> {
-    fn from(_req: &GetAuthRequestLoginFormRequest) -> Self {
+impl GetAuthRequestGetForm {
+    fn to_request(&self) -> Request<Body> {
         Request::builder()
             .method(Method::GET)
             .uri(Uri::from_static("https://login.live.com/oauth20_authorize.srf?client_id=000000004C0BD2F1&scope=xbox.basic+xbox.offline_access&response_type=code&redirect_uri=https:%2f%2fwww.halowaypoint.com%2fauth%2fcallback&locale=en-us&display=touch&state=https%253a%252f%252fwww.halowaypoint.com%252fen-us"))
@@ -40,14 +41,20 @@ impl From<&GetAuthRequestLoginFormRequest> for Request<Body> {
     }
 }
 
-#[derive(Debug)]
-pub struct GetAuthRequestLoginFormResponse {
+impl From<&GetAuthRequestGetForm> for Request<Body> {
+    fn from(req: &GetAuthRequestGetForm) -> Self {
+        req.to_request()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct GetAuthRequestForm {
     uri: Uri,
     ppft: String,
     cookies: Vec<String>,
 }
 
-impl GetAuthRequestLoginFormResponse {
+impl GetAuthRequestForm {
     fn regex_set_cookie_name_value() -> Regex {
         Regex::new("^([^;]+);").unwrap()
     }
@@ -64,11 +71,8 @@ impl GetAuthRequestLoginFormResponse {
     fn new(uri: Uri, ppft: String, cookies: Vec<String>) -> Self {
         Self { uri, ppft, cookies }
     }
-}
 
-impl TryFrom<Response<String>> for GetAuthRequestLoginFormResponse {
-    type Error = Error;
-    fn try_from(res: Response<String>) -> Result<Self, Self::Error> {
+    fn try_from_response(res: Response<String>) -> Result<Self, Error> {
         let cookies = res
             .headers()
             .get_all(header::SET_COOKIE)
@@ -91,83 +95,67 @@ impl TryFrom<Response<String>> for GetAuthRequestLoginFormResponse {
 
         match (res.status(), ppft, uri) {
             (StatusCode::OK, Some(ppft), Some(uri)) => Ok(Self::new(uri, ppft, cookies)),
-            _ => Err(HaloWaypointError::Http {
-                body: res.into_body(),
-            }
-            .into()),
+            _ => HaloWaypointError::Http(res.into_body())
+                .pipe(Error::HaloWaypoint)
+                .pipe(Err),
         }
     }
 }
 
-pub struct GetAuthRequestLoginRequest {
-    login: String,
-    password: String,
-    uri: Uri,
-    ppft: String,
-    cookies: Vec<String>,
+impl TryFrom<Response<String>> for GetAuthRequestForm {
+    type Error = Error;
+    fn try_from(res: Response<String>) -> Result<Self, Self::Error> {
+        Self::try_from_response(res)
+    }
 }
 
-impl GetAuthRequestLoginRequest {
-    pub fn new(
-        login: String,
-        password: String,
-        uri: Uri,
-        ppft: String,
-        cookies: Vec<String>,
-    ) -> Self {
+#[derive(Debug, Clone)]
+pub struct GetAuthRequestPostForm {
+    req: GetAuthRequest,
+    form: GetAuthRequestForm,
+}
+
+impl GetAuthRequestPostForm {
+    pub fn new(req: &GetAuthRequest, form: &GetAuthRequestForm) -> Self {
         Self {
-            login,
-            password,
-            uri,
-            ppft,
-            cookies,
+            req: req.clone(),
+            form: form.clone(),
         }
     }
-}
 
-impl From<(&GetAuthRequest, &GetAuthRequestLoginFormResponse)> for GetAuthRequestLoginRequest {
-    fn from(req: (&GetAuthRequest, &GetAuthRequestLoginFormResponse)) -> Self {
-        Self::new(
-            req.0.login.clone(),
-            req.0.password.clone(),
-            req.1.uri.clone(),
-            req.1.ppft.clone(),
-            req.1.cookies.clone(),
-        )
-    }
-}
-
-impl From<&GetAuthRequestLoginRequest> for Request<Body> {
-    fn from(req: &GetAuthRequestLoginRequest) -> Self {
+    pub fn to_request(&self) -> Request<Body> {
         let body = format!(
             "login={}&passwd={}&PPFT={}",
-            req.login, req.password, req.ppft
+            self.req.login, self.req.password, self.form.ppft
         );
 
         Request::builder()
             .method(Method::POST)
-            .uri(req.uri.clone())
-            .header(header::COOKIE, req.cookies.join(";"))
+            .uri(self.form.uri.clone())
+            .header(header::COOKIE, self.form.cookies.join(";"))
             .header(header::CONTENT_TYPE, "application/x-www-form-urlencoded")
             .body(Body::from(body))
             .unwrap()
     }
 }
 
-#[derive(Debug)]
-pub struct GetAuthRequestLoginResponse {
-    location: Uri,
-}
-
-impl GetAuthRequestLoginResponse {
-    fn new(location: Uri) -> Self {
-        Self { location }
+impl From<&GetAuthRequestPostForm> for Request<Body> {
+    fn from(req: &GetAuthRequestPostForm) -> Self {
+        req.to_request()
     }
 }
 
-impl TryFrom<Response<String>> for GetAuthRequestLoginResponse {
-    type Error = Error;
-    fn try_from(res: Response<String>) -> Result<Self, Self::Error> {
+#[derive(Debug, Clone)]
+pub struct GetAuthRequestRedirect {
+    location: Uri,
+}
+
+impl GetAuthRequestRedirect {
+    fn new(location: Uri) -> Self {
+        Self { location }
+    }
+
+    fn try_from_response(res: Response<String>) -> Result<Self, Error> {
         let location = res
             .headers()
             .get(header::LOCATION)
@@ -176,58 +164,53 @@ impl TryFrom<Response<String>> for GetAuthRequestLoginResponse {
 
         match (res.status(), location) {
             (StatusCode::FOUND, Some(location)) => Ok(Self::new(location)),
-            _ => Err(HaloWaypointError::Http {
-                body: res.into_body(),
-            }
-            .into()),
+            _ => HaloWaypointError::Http(res.into_body())
+                .pipe(Error::HaloWaypoint)
+                .pipe(Err),
         }
     }
-}
 
-impl From<&GetAuthRequestLoginResponse> for GetAuthRequestRedirectRequest {
-    fn from(req: &GetAuthRequestLoginResponse) -> Self {
-        Self::new(req.location.clone())
-    }
-}
-
-pub struct GetAuthRequestRedirectRequest {
-    location: Uri,
-}
-
-impl GetAuthRequestRedirectRequest {
-    fn new(location: Uri) -> Self {
-        Self { location }
-    }
-}
-
-impl From<&GetAuthRequestRedirectRequest> for Request<Body> {
-    fn from(req: &GetAuthRequestRedirectRequest) -> Self {
+    pub fn to_request(&self) -> Request<Body> {
         Request::builder()
             .method(Method::GET)
-            .uri(req.location.clone())
+            .uri(self.location.clone())
             .body(Body::empty())
             .unwrap()
     }
 }
 
-#[derive(Debug)]
-pub struct GetAuthRequestRedirectResponse {
+impl TryFrom<Response<String>> for GetAuthRequestRedirect {
+    type Error = Error;
+    fn try_from(res: Response<String>) -> Result<Self, Self::Error> {
+        Self::try_from_response(res)
+    }
+}
+
+impl From<&GetAuthRequestRedirect> for Request<Body> {
+    fn from(req: &GetAuthRequestRedirect) -> Self {
+        req.to_request()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct GetAuthResponse {
     auth_header: String,
 }
 
-impl GetAuthRequestRedirectResponse {
+impl GetAuthResponse {
     fn regex_auth_header() -> Regex {
         Regex::new("^(Auth=[^;]+);").unwrap()
     }
 
-    fn new(auth_header: String) -> Self {
+    pub fn new(auth_header: String) -> Self {
         Self { auth_header }
     }
-}
 
-impl TryFrom<Response<String>> for GetAuthRequestRedirectResponse {
-    type Error = Error;
-    fn try_from(res: Response<String>) -> Result<Self, Self::Error> {
+    pub fn auth_header(&self) -> String {
+        self.auth_header.clone()
+    }
+
+    fn try_from_response(res: Response<String>) -> Result<Self, Error> {
         let auth_header = res
             .headers()
             .get_all(header::SET_COOKIE)
@@ -240,31 +223,16 @@ impl TryFrom<Response<String>> for GetAuthRequestRedirectResponse {
 
         match (res.status(), auth_header) {
             (StatusCode::FOUND, Some(auth_header)) => Ok(Self::new(auth_header)),
-            _ => Err(HaloWaypointError::Http {
-                body: res.into_body(),
-            }
-            .into()),
+            _ => HaloWaypointError::Http(res.into_body())
+                .pipe(Error::HaloWaypoint)
+                .pipe(Err),
         }
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct GetAuthResponse {
-    auth_header: String,
-}
-
-impl GetAuthResponse {
-    fn new(auth_header: String) -> Self {
-        Self { auth_header }
-    }
-
-    pub fn auth_header(&self) -> String {
-        self.auth_header.clone()
-    }
-}
-
-impl From<&GetAuthRequestRedirectResponse> for GetAuthResponse {
-    fn from(req: &GetAuthRequestRedirectResponse) -> Self {
-        Self::new(req.auth_header.clone())
+impl TryFrom<Response<String>> for GetAuthResponse {
+    type Error = Error;
+    fn try_from(res: Response<String>) -> Result<Self, Self::Error> {
+        Self::try_from_response(res)
     }
 }

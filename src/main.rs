@@ -34,11 +34,9 @@ impl NotFound {
             .body(Body::empty())
             .unwrap())
     }
-}
 
-impl Default for NotFound {
-    fn default() -> NotFound {
-        NotFound
+    fn default() -> Self {
+        Self
     }
 }
 

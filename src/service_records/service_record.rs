@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use time::Time;
 
 use std::cmp::Ordering;
@@ -14,13 +15,8 @@ pub struct ServiceRecord {
 }
 
 impl ServiceRecord {
-    pub fn new(
-        player: String,
-        game_id: i32,
-        mission_id: i32,
-        runs: Vec<ServiceRecordRun>,
-    ) -> ServiceRecord {
-        ServiceRecord {
+    pub fn new(player: String, game_id: i32, mission_id: i32, runs: Vec<ServiceRecordRun>) -> Self {
+        Self {
             player,
             game_id,
             mission_id,
@@ -42,6 +38,26 @@ impl ServiceRecord {
 
     pub fn runs(&self) -> Vec<ServiceRecordRun> {
         self.runs.clone()
+    }
+
+    pub fn from_player_and_runs(
+        player: &str,
+        runs: &[(i32, i32, CampaignMode, Difficulty, Time, i32)],
+    ) -> Vec<Self> {
+        runs.iter()
+            .map(|(g, m, c, d, t, s)| ((g, m), (c, d, t, s)))
+            .into_group_map()
+            .into_iter()
+            .map(|((game_id, mission_id), runs)| {
+                let runs = runs
+                    .into_iter()
+                    .map(|(c, d, t, s)| ServiceRecordRun::new(*c, *d, *t, *s))
+                    .collect();
+
+                Self::new(player.to_string(), *game_id, *mission_id, runs)
+            })
+            .sorted()
+            .collect()
     }
 }
 

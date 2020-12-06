@@ -18,26 +18,24 @@ pub enum HaloMission {
     TheMaw,
 }
 
-impl From<HaloMission> for Mission {
-    fn from(mission: HaloMission) -> Self {
-        Self::Halo(mission)
+impl HaloMission {
+    pub fn to_mission(&self) -> Mission {
+        Mission::Halo(*self)
     }
-}
 
-impl From<HaloMission> for MissionProperties {
     #[rustfmt::skip]
-    fn from(mission: HaloMission) -> Self {
-        match mission {
-            HaloMission::PillarOfAutumn => MissionProperties { game_id: Game::Halo.id(), id: 1, name: "Pillar of Autumn".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(17_000) },
-            HaloMission::Halo => MissionProperties { game_id: Game::Halo.id(), id: 2, name: "Halo".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(12_000) },
-            HaloMission::TruthAndReconciliation => MissionProperties { game_id: Game::Halo.id(), id: 3, name: "Truth and Reconciliation".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(19_000) },
-            HaloMission::SilentCartographer => MissionProperties { game_id: Game::Halo.id(), id: 4, name: "Silent Cartographer".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(18_000) },
-            HaloMission::AssaultOnTheControlRoom => MissionProperties { game_id: Game::Halo.id(), id: 5, name: "Assault on the Control Room".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(18_000) },
-            HaloMission::ThreeFourThreeGuiltySpark => MissionProperties { game_id: Game::Halo.id(), id: 6, name: "343 Guilty Spark".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(17_000) },
-            HaloMission::TheLibrary => MissionProperties { game_id: Game::Halo.id(), id: 7, name: "The Library".to_string(), par_time: Some(time!(00:25:00)), par_score: Some(25_000) },
-            HaloMission::TwoBetrayals => MissionProperties { game_id: Game::Halo.id(), id: 8, name: "Two Betrayals".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(16_000) },
-            HaloMission::Keyes => MissionProperties { game_id: Game::Halo.id(), id: 9, name: "Keyes".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(20_000) },
-            HaloMission::TheMaw => MissionProperties { game_id: Game::Halo.id(), id: 10, name: "The Maw".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(18_000) },
+    pub fn to_properties(&self) -> MissionProperties {
+        match self {
+            Self::PillarOfAutumn => MissionProperties { game_id: Game::Halo.id(), id: 1, name: "Pillar of Autumn".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(17_000) },
+            Self::Halo => MissionProperties { game_id: Game::Halo.id(), id: 2, name: "Halo".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(12_000) },
+            Self::TruthAndReconciliation => MissionProperties { game_id: Game::Halo.id(), id: 3, name: "Truth and Reconciliation".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(19_000) },
+            Self::SilentCartographer => MissionProperties { game_id: Game::Halo.id(), id: 4, name: "Silent Cartographer".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(18_000) },
+            Self::AssaultOnTheControlRoom => MissionProperties { game_id: Game::Halo.id(), id: 5, name: "Assault on the Control Room".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(18_000) },
+            Self::ThreeFourThreeGuiltySpark => MissionProperties { game_id: Game::Halo.id(), id: 6, name: "343 Guilty Spark".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(17_000) },
+            Self::TheLibrary => MissionProperties { game_id: Game::Halo.id(), id: 7, name: "The Library".to_string(), par_time: Some(time!(00:25:00)), par_score: Some(25_000) },
+            Self::TwoBetrayals => MissionProperties { game_id: Game::Halo.id(), id: 8, name: "Two Betrayals".to_string(), par_time: Some(time!(00:20:00)), par_score: Some(16_000) },
+            Self::Keyes => MissionProperties { game_id: Game::Halo.id(), id: 9, name: "Keyes".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(20_000) },
+            Self::TheMaw => MissionProperties { game_id: Game::Halo.id(), id: 10, name: "The Maw".to_string(), par_time: Some(time!(00:15:00)), par_score: Some(18_000) },
         }
     }
 }

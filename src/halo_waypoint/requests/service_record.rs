@@ -2,14 +2,14 @@ use http::method::Method;
 use http::uri::{Builder, PathAndQuery, Scheme, Uri};
 use http::{header, Request, Response, StatusCode};
 use hyper::Body;
-use itertools::Itertools;
 use scraper::{ElementRef, Html, Selector};
-use std::borrow::Borrow;
 use std::convert::TryFrom;
 use std::result::Result;
+use time::Time;
 
 use crate::campaign_modes::campaign_mode::CampaignMode as InternalCampaignMode;
 use crate::chainable::Chainable;
+use crate::difficulties::difficulty::Difficulty as InternalDifficulty;
 use crate::error::{Error, HaloWaypointError};
 use crate::games::game::Game as InternalGame;
 use crate::halo_waypoint::models::campaign_mode::CampaignMode;
@@ -19,7 +19,6 @@ use crate::halo_waypoint::models::game::Game;
 use crate::halo_waypoint::models::highest_score::HighestScore;
 use crate::halo_waypoint::models::mission_id::MissionId;
 use crate::halo_waypoint::requests::auth::GetAuthResponse;
-use crate::service_records::service_record::{ServiceRecord, ServiceRecordRun};
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct GetServiceRecordRequest {
@@ -29,59 +28,49 @@ pub struct GetServiceRecordRequest {
 }
 
 impl GetServiceRecordRequest {
-    pub fn new(player: String, game: InternalGame, campaign_mode: InternalCampaignMode) -> Self {
+    pub fn new(player: &str, game: &Game, campaign_mode: &CampaignMode) -> Self {
         Self {
-            player,
-            game: Game::from(&game),
-            campaign_mode: CampaignMode::from(&campaign_mode),
+            player: player.to_string(),
+            game: *game,
+            campaign_mode: *campaign_mode,
         }
     }
-}
 
-pub struct GetServiceRecordRequestAuthenticated {
-    auth_header: String,
-    player: String,
-    game: Game,
-    campaign_mode: CampaignMode,
-}
-
-impl GetServiceRecordRequestAuthenticated {
-    pub fn new(
-        auth_header: String,
-        player: String,
-        game: Game,
-        campaign_mode: CampaignMode,
+    pub fn from_internal(
+        player: &str,
+        game: &InternalGame,
+        campaign_mode: &InternalCampaignMode,
     ) -> Self {
-        Self {
-            auth_header,
-            player,
-            game,
-            campaign_mode,
-        }
-    }
-}
-
-impl From<(&GetAuthResponse, &GetServiceRecordRequest)> for GetServiceRecordRequestAuthenticated {
-    fn from(req: (&GetAuthResponse, &GetServiceRecordRequest)) -> Self {
         Self::new(
-            req.0.auth_header(),
-            req.1.player.clone(),
-            req.1.game,
-            req.1.campaign_mode,
+            player,
+            &Game::from_internal(game),
+            &CampaignMode::from_internal(campaign_mode),
         )
     }
 }
 
-impl From<&GetServiceRecordRequestAuthenticated> for Uri {
-    fn from(req: &GetServiceRecordRequestAuthenticated) -> Self {
+pub struct AuthenticatedGetServiceRecord {
+    authentication: GetAuthResponse,
+    request: GetServiceRecordRequest,
+}
+
+impl AuthenticatedGetServiceRecord {
+    pub fn new(authentication: GetAuthResponse, request: GetServiceRecordRequest) -> Self {
+        Self {
+            authentication,
+            request,
+        }
+    }
+
+    pub fn to_uri(&self) -> Uri {
         let path_and_query = format!(
             "/{}/games/{}/{}/service-records/players/{}/missions?game={}&campaignMode={}",
             "en-us",                            // local
             "halo-the-master-chief-collection", // game
             "xbox-one",                         // platform
-            req.player,
-            req.game.to_string(),
-            req.campaign_mode.to_string(),
+            self.request.player,
+            self.request.game.to_string(),
+            self.request.campaign_mode.to_string(),
         )
         .pipe(PathAndQuery::from_maybe_shared)
         .unwrap();
@@ -93,17 +82,21 @@ impl From<&GetServiceRecordRequestAuthenticated> for Uri {
             .build()
             .unwrap()
     }
-}
 
-impl From<&GetServiceRecordRequestAuthenticated> for Request<Body> {
-    fn from(req: &GetServiceRecordRequestAuthenticated) -> Self {
+    pub fn to_request(&self) -> Request<Body> {
         Request::builder()
             .method(Method::GET)
-            .uri(Uri::from(req))
-            .header(header::COOKIE, req.auth_header.clone())
+            .uri(self.to_uri())
+            .header(header::COOKIE, self.authentication.auth_header())
             .header("X-Requested-With", "XMLHttpRequest")
             .body(Body::empty())
             .unwrap()
+    }
+}
+
+impl From<&AuthenticatedGetServiceRecord> for Request<Body> {
+    fn from(req: &AuthenticatedGetServiceRecord) -> Self {
+        req.to_request()
     }
 }
 
@@ -112,14 +105,12 @@ mod get_service_record_request_test {
     use super::*;
 
     #[test]
-    fn into_uri() {
-        let req = GetServiceRecordRequestAuthenticated::new(
-            "".to_string(),
-            "John117".to_string(),
-            Game::Halo,
-            CampaignMode::Solo,
+    fn to_uri() {
+        let req = AuthenticatedGetServiceRecord::new(
+            GetAuthResponse::new("".to_string()),
+            GetServiceRecordRequest::new("John117", &Game::Halo, &CampaignMode::Solo),
         );
-        let uri = Uri::from(&req);
+        let uri = req.to_uri();
 
         assert_eq!(uri.path(), "/en-us/games/halo-the-master-chief-collection/xbox-one/service-records/players/John117/missions");
         assert_eq!(
@@ -136,38 +127,28 @@ pub struct GetServiceRecordResponse {
     missions: Vec<GetServiceRecordResponseMission>,
 }
 
-impl TryFrom<Response<String>> for GetServiceRecordResponse {
-    type Error = Error;
-    fn try_from(res: Response<String>) -> Result<Self, Self::Error> {
+impl GetServiceRecordResponse {
+    fn try_from_response(res: Response<String>) -> Result<Self, Error> {
         match res.status() {
-            StatusCode::OK => Html::parse_fragment(res.body()).pipe(Self::try_from),
-            _ => Err(HaloWaypointError::Http {
-                body: res.into_body(),
-            }
-            .into()),
+            StatusCode::OK => Html::parse_fragment(res.body())
+                .root_element()
+                .pipe(Self::try_from_halo_waypoint_service_record),
+            _ => HaloWaypointError::Http(res.into_body())
+                .pipe(Error::HaloWaypoint)
+                .pipe(Err),
         }
     }
-}
 
-impl TryFrom<Html> for GetServiceRecordResponse {
-    type Error = Error;
-    fn try_from(html: Html) -> Result<Self, Self::Error> {
-        html.root_element().pipe(Self::try_from)
-    }
-}
-
-impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
-    type Error = Error;
-    fn try_from(element: ElementRef) -> Result<Self, Self::Error> {
-        let game = Game::try_from(element);
-        let campaign_mode = CampaignMode::try_from(element);
+    fn try_from_halo_waypoint_service_record(element: ElementRef) -> Result<Self, Error> {
+        let game = Game::try_from_halo_waypoint_service_record(element);
+        let campaign_mode = CampaignMode::try_from_halo_waypoint_service_record(element);
 
         let missions = Selector::parse("[data-mission-id]")
             .unwrap()
             .pipe(|selector| {
                 element
                     .select(&selector)
-                    .map(GetServiceRecordResponseMission::try_from)
+                    .map(GetServiceRecordResponseMission::try_from_halo_waypoint_service_record)
                     .collect::<Result<Vec<GetServiceRecordResponseMission>, Error>>()
             });
 
@@ -182,10 +163,50 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponse {
                     .into_iter()
                     .flatten()
                     .collect::<Vec<Error>>()
-                    .pipe(|errors| Error::List { errors })
+                    .pipe(Error::List)
                     .pipe(Err)
             }
         }
+    }
+
+    pub fn to_internal(
+        &self,
+    ) -> Vec<(
+        i32,
+        i32,
+        InternalCampaignMode,
+        InternalDifficulty,
+        Time,
+        i32,
+    )> {
+        let game_id = self.game.to_internal().id();
+        let campaign_mode = self.campaign_mode.to_internal();
+
+        let missions_id_delta = self.game.missions_id_delta();
+
+        self.missions
+            .iter()
+            .filter_map(move |m| {
+                let mission_id = missions_id_delta + m.id.to_internal();
+                let difficulty = m.difficulty.to_internal();
+                let time = m.fastest_time.to_internal();
+                let score = m.highest_score.to_internal().unwrap_or(0);
+
+                match (difficulty, time) {
+                    (Some(difficulty), Some(time)) => {
+                        Some((game_id, mission_id, campaign_mode, difficulty, time, score))
+                    }
+                    _ => None,
+                }
+            })
+            .collect()
+    }
+}
+
+impl TryFrom<Response<String>> for GetServiceRecordResponse {
+    type Error = Error;
+    fn try_from(res: Response<String>) -> Result<Self, Self::Error> {
+        Self::try_from_response(res)
     }
 }
 
@@ -197,13 +218,12 @@ pub struct GetServiceRecordResponseMission {
     highest_score: HighestScore,
 }
 
-impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
-    type Error = Error;
-    fn try_from(element: ElementRef) -> Result<Self, Self::Error> {
-        let id = MissionId::try_from(element);
-        let difficulty = Difficulty::try_from(element);
-        let fastest_time = FastestTime::try_from(element);
-        let highest_score = HighestScore::try_from(element);
+impl GetServiceRecordResponseMission {
+    fn try_from_halo_waypoint_service_record(element: ElementRef) -> Result<Self, Error> {
+        let id = MissionId::try_from_halo_waypoint_service_record(element);
+        let difficulty = Difficulty::try_from_halo_waypoint_service_record(element);
+        let fastest_time = FastestTime::try_from_halo_waypoint_service_record(element);
+        let highest_score = HighestScore::try_from_halo_waypoint_service_record(element);
 
         match (id, difficulty, fastest_time, highest_score) {
             (Ok(id), Ok(difficulty), Ok(fastest_time), Ok(highest_score)) => Ok(Self {
@@ -221,7 +241,7 @@ impl<'a> TryFrom<ElementRef<'a>> for GetServiceRecordResponseMission {
             .into_iter()
             .flatten()
             .collect::<Vec<Error>>()
-            .pipe(|errors| Error::List { errors })
+            .pipe(Error::List)
             .pipe(Err),
         }
     }
@@ -240,7 +260,9 @@ mod get_service_record_response_test {
             .map(|entry| {
                 fs::read_to_string(entry.unwrap().path())
                     .unwrap()
-                    .pipe(|s| Html::parse_fragment(&s).pipe(GetServiceRecordResponse::try_from))
+                    .pipe(|s| Html::parse_fragment(&s))
+                    .root_element()
+                    .pipe(GetServiceRecordResponse::try_from_halo_waypoint_service_record)
             })
             .collect::<Result<Vec<GetServiceRecordResponse>, Error>>();
 
@@ -252,7 +274,9 @@ mod get_service_record_response_test {
     fn halo_solo() {
         let res = fs::read_to_string("resources/halo_waypoint/service_records/halo_solo.html")
             .unwrap()
-            .pipe(|s| Html::parse_fragment(&s).pipe(GetServiceRecordResponse::try_from))
+            .pipe(|s| Html::parse_fragment(&s))
+            .root_element()
+            .pipe(GetServiceRecordResponse::try_from_halo_waypoint_service_record)
             .unwrap();
 
         assert_eq!(res.game, Game::Halo);
@@ -365,7 +389,9 @@ mod get_service_record_response_test {
     fn halo_coop() {
         let res = fs::read_to_string("resources/halo_waypoint/service_records/halo_coop.html")
             .unwrap()
-            .pipe(|s| Html::parse_fragment(&s).pipe(GetServiceRecordResponse::try_from))
+            .pipe(|s| Html::parse_fragment(&s))
+            .root_element()
+            .pipe(GetServiceRecordResponse::try_from_halo_waypoint_service_record)
             .unwrap();
 
         assert_eq!(res.game, Game::Halo);
@@ -471,59 +497,5 @@ mod get_service_record_response_test {
         );
 
         assert_eq!(res.missions.get(10), None);
-    }
-}
-
-pub struct PlayerWithGetServiceRecordResponse {
-    player: String,
-    responses: Vec<GetServiceRecordResponse>,
-}
-
-impl From<(String, Vec<GetServiceRecordResponse>)> for PlayerWithGetServiceRecordResponse {
-    fn from(
-        tuple_player_responses: (String, Vec<GetServiceRecordResponse>),
-    ) -> PlayerWithGetServiceRecordResponse {
-        let (player, responses) = tuple_player_responses;
-        PlayerWithGetServiceRecordResponse { player, responses }
-    }
-}
-
-impl Into<Vec<ServiceRecord>> for PlayerWithGetServiceRecordResponse {
-    fn into(self) -> Vec<ServiceRecord> {
-        let player = self.player.clone();
-        self.responses
-            .into_iter()
-            .flat_map(|r| {
-                let game_id = InternalGame::from(&r.game).id();
-                let missions_id_delta = r.game.missions_id_delta();
-                let campaign_mode = InternalCampaignMode::from(&r.campaign_mode);
-
-                r.missions.into_iter().filter_map(move |m| {
-                    match (m.difficulty.borrow().into(), m.fastest_time.borrow().into()) {
-                        (Some(difficulty), Some(time)) => Some((
-                            (game_id, missions_id_delta + m.id.value()),
-                            (
-                                campaign_mode,
-                                difficulty,
-                                time,
-                                Into::<Option<i32>>::into(&m.highest_score).unwrap_or(0 as i32),
-                            ),
-                        )),
-                        _ => None,
-                    }
-                })
-            })
-            .into_group_map()
-            .into_iter()
-            .map(|((game_id, mission_id), runs)| {
-                let runs = runs
-                    .into_iter()
-                    .map(|(c, d, t, s)| ServiceRecordRun::new(c, d, t, s))
-                    .collect();
-
-                ServiceRecord::new(player.clone(), game_id, mission_id, runs)
-            })
-            .sorted()
-            .collect()
     }
 }

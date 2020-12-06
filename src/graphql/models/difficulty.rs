@@ -10,16 +10,16 @@ where
     // Define how to convert your custom scalar into a primitive type.
     fn resolve(&self) -> Value {
         let value = match self {
-            Difficulty::Easy => "easy",
-            Difficulty::Normal => "normal",
-            Difficulty::Heroic => "heroic",
-            Difficulty::Legendary => "legendary",
+            Self::Easy => "easy",
+            Self::Normal => "normal",
+            Self::Heroic => "heroic",
+            Self::Legendary => "legendary",
         };
 
         Value::scalar(value.to_string())
     }
 
-    fn from_input_value(_v: &InputValue) -> Option<Difficulty> {
+    fn from_input_value(_v: &InputValue) -> Option<Self> {
         unimplemented!();
     }
 

@@ -1,5 +1,4 @@
 use scraper::{ElementRef, Selector};
-use std::convert::TryFrom;
 use std::result::Result;
 use time::Time;
 
@@ -11,9 +10,8 @@ pub enum FastestTime {
     None,
 }
 
-impl<'a> TryFrom<ElementRef<'a>> for FastestTime {
-    type Error = Error;
-    fn try_from(element: ElementRef) -> Result<Self, Self::Error> {
+impl FastestTime {
+    pub fn try_from_halo_waypoint_service_record(element: ElementRef) -> Result<Self, Error> {
         let selector = Selector::parse(".best-time").unwrap();
 
         element
@@ -21,22 +19,18 @@ impl<'a> TryFrom<ElementRef<'a>> for FastestTime {
             .next()
             .ok_or(HaloWaypointError::MissingTime)
             .and_then(|element| match element.inner_html().as_str() {
-                "--" => Ok(FastestTime::None),
-                html => Time::parse(html, "%T").map(FastestTime::Some).map_err(|_| {
-                    HaloWaypointError::InvalidTime {
-                        time: html.to_string(),
-                    }
-                }),
+                "--" => Ok(Self::None),
+                html => Time::parse(html, "%T")
+                    .map(Self::Some)
+                    .map_err(|_| HaloWaypointError::InvalidTime(html.to_string())),
             })
-            .map_err(|err| err.into())
+            .map_err(Error::HaloWaypoint)
     }
-}
 
-impl From<&FastestTime> for Option<Time> {
-    fn from(fastest_time: &FastestTime) -> Self {
-        match fastest_time {
-            FastestTime::Some(time) => Some(*time),
-            FastestTime::None => None,
+    pub fn to_internal(&self) -> Option<Time> {
+        match self {
+            Self::Some(time) => Some(*time),
+            Self::None => None,
         }
     }
 }

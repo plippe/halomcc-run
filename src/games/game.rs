@@ -11,24 +11,17 @@ pub enum Game {
 }
 
 impl Game {
-    pub fn id(self) -> i32 {
-        GameProperties::from(self).id
+    pub fn id(&self) -> i32 {
+        self.to_properties().id
     }
 
-    pub fn name(self) -> String {
-        GameProperties::from(self).name
+    pub fn name(&self) -> String {
+        self.to_properties().name
     }
-}
 
-struct GameProperties {
-    id: i32,
-    name: String,
-}
-
-impl From<Game> for GameProperties {
     #[rustfmt::skip]
-    fn from(game: Game) -> GameProperties {
-        match game {
+    fn to_properties(self) -> GameProperties {
+        match self {
             Game::Halo => GameProperties { id: 1, name: "Halo: Combat Evolved Anniversary".to_string() },
             Game::Halo2 => GameProperties { id: 2, name: "Halo 2: Anniversary".to_string() },
             Game::Halo3 => GameProperties { id: 3, name: "Halo 3".to_string() },
@@ -37,4 +30,9 @@ impl From<Game> for GameProperties {
             Game::Halo4 => GameProperties { id: 6, name: "Halo 4".to_string() },
         }
     }
+}
+
+struct GameProperties {
+    id: i32,
+    name: String,
 }
