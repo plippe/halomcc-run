@@ -179,7 +179,7 @@ impl GetServiceRecordResponse {
         Time,
         i32,
     )> {
-        let game_id = self.game.to_internal().id();
+        let game_id = self.game.to_internal();
         let campaign_mode = self.campaign_mode.to_internal();
 
         let missions_id_delta = self.game.missions_id_delta();
