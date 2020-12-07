@@ -182,12 +182,10 @@ impl GetServiceRecordResponse {
         let game_id = self.game.to_internal();
         let campaign_mode = self.campaign_mode.to_internal();
 
-        let missions_id_delta = self.game.missions_id_delta();
-
         self.missions
             .iter()
             .filter_map(move |m| {
-                let mission_id = missions_id_delta + m.id.to_internal();
+                let mission_id = m.id.to_internal();
                 let difficulty = m.difficulty.to_internal();
                 let time = m.fastest_time.to_internal();
                 let score = m.highest_score.to_internal().unwrap_or(0);

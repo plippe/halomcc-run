@@ -61,17 +61,6 @@ impl Game {
             .and_then(Self::try_from_str)
     }
 
-    pub fn missions_id_delta(self) -> i32 {
-        match self {
-            Self::Halo => 1,
-            Self::Halo2 => -28,
-            Self::Halo3 => -68,
-            Self::Halo3Odst => -165,
-            Self::HaloReach => -177,
-            Self::Halo4 => -102,
-        }
-    }
-
     pub fn from_internal(game: &InternalGame) -> Self {
         match game.id() {
             1 => Self::Halo,
