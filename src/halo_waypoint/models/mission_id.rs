@@ -26,6 +26,14 @@ impl MissionId {
     }
 
     pub fn to_internal(&self) -> i32 {
-        self.0
+        match self.0 {
+            0..=9 => self.0 + 1,
+            31..=43 => self.0 - 28,
+            70..=78 => self.0 - 68,
+            168..=175 => self.0 - 165,
+            178..=189 => self.0 - 177,
+            104..=111 => self.0 - 102,
+            other => unreachable!("External mission id shouldn't exist: {}", other),
+        }
     }
 }
