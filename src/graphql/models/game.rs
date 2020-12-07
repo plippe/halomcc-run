@@ -26,7 +26,7 @@ impl Game {
     ) -> Option<Vec<ServiceRecord>> {
         context
             .service_records_doa()
-            .find_by_player_and_game(player, *self)
+            .find_by_player_and_game(player, self.clone())
             .await
     }
 }

@@ -73,24 +73,25 @@ impl Game {
     }
 
     pub fn from_internal(game: &InternalGame) -> Self {
-        match game {
-            InternalGame::Halo => Self::Halo,
-            InternalGame::Halo2 => Self::Halo2,
-            InternalGame::Halo3 => Self::Halo3,
-            InternalGame::Halo3Odst => Self::Halo3Odst,
-            InternalGame::HaloReach => Self::HaloReach,
-            InternalGame::Halo4 => Self::Halo4,
+        match game.id() {
+            1 => Self::Halo,
+            2 => Self::Halo2,
+            3 => Self::Halo3,
+            4 => Self::Halo3Odst,
+            5 => Self::HaloReach,
+            6 => Self::Halo4,
+            other => unreachable!("Internal game id shouldn't exist: {}", other),
         }
     }
 
-    pub fn to_internal(&self) -> InternalGame {
+    pub fn to_internal(&self) -> i32 {
         match self {
-            Self::Halo => InternalGame::Halo,
-            Self::Halo2 => InternalGame::Halo2,
-            Self::Halo3 => InternalGame::Halo3,
-            Self::Halo3Odst => InternalGame::Halo3Odst,
-            Self::HaloReach => InternalGame::HaloReach,
-            Self::Halo4 => InternalGame::Halo4,
+            Self::Halo => 1,
+            Self::Halo2 => 2,
+            Self::Halo3 => 3,
+            Self::Halo3Odst => 4,
+            Self::HaloReach => 5,
+            Self::Halo4 => 6,
         }
     }
 }
