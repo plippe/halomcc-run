@@ -5,17 +5,23 @@ use std::cmp::Ordering;
 
 use crate::campaign_modes::campaign_mode::CampaignMode;
 use crate::difficulties::difficulty::Difficulty;
+use crate::games::game::GameId;
 
 #[derive(PartialEq, Eq)]
 pub struct ServiceRecord {
     player: String,
-    game_id: i32,
+    game_id: GameId,
     mission_id: i32,
     runs: Vec<ServiceRecordRun>,
 }
 
 impl ServiceRecord {
-    pub fn new(player: String, game_id: i32, mission_id: i32, runs: Vec<ServiceRecordRun>) -> Self {
+    pub fn new(
+        player: String,
+        game_id: GameId,
+        mission_id: i32,
+        runs: Vec<ServiceRecordRun>,
+    ) -> Self {
         Self {
             player,
             game_id,
@@ -28,7 +34,7 @@ impl ServiceRecord {
         self.player.clone()
     }
 
-    pub fn game_id(&self) -> i32 {
+    pub fn game_id(&self) -> GameId {
         self.game_id
     }
 
@@ -42,7 +48,7 @@ impl ServiceRecord {
 
     pub fn from_player_and_runs(
         player: &str,
-        runs: &[(i32, i32, CampaignMode, Difficulty, Time, i32)],
+        runs: &[(GameId, i32, CampaignMode, Difficulty, Time, i32)],
     ) -> Vec<Self> {
         runs.iter()
             .map(|(g, m, c, d, t, s)| ((g, m), (c, d, t, s)))

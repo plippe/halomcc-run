@@ -15,7 +15,7 @@ impl ServiceRecord {
     }
 
     fn game_id(&self) -> i32 {
-        self.game_id()
+        *self.game_id().value()
     }
 
     fn game(&self, context: &Context) -> Option<Game> {

@@ -1,6 +1,6 @@
 use juniper::{graphql_object, FieldResult};
 
-use crate::games::game::Game;
+use crate::games::game::{Game, GameId};
 use crate::graphql::context::Context;
 
 pub struct Query;
@@ -12,6 +12,6 @@ impl Query {
     }
 
     fn game(context: &Context, id: i32) -> FieldResult<Option<Game>> {
-        Ok(context.games_dao().find_by_id(id))
+        Ok(context.games_dao().find_by_id(GameId::new(id)))
     }
 }

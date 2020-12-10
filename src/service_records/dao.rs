@@ -6,7 +6,7 @@ use crate::chainable::Chainable;
 use crate::difficulties::difficulty::Difficulty;
 use crate::error::Error;
 use crate::games::dao::{GamesDao, InMemoryGamesDao};
-use crate::games::game::Game;
+use crate::games::game::{Game, GameId};
 use crate::halo_waypoint::client::{Client, InMemoryCacheClient};
 use crate::halo_waypoint::requests::auth::GetAuthRequest;
 use crate::halo_waypoint::requests::service_record::{
@@ -50,7 +50,7 @@ impl ServiceRecordsDao {
             .map(|res| {
                 res.iter()
                     .flat_map(GetServiceRecordResponse::to_internal)
-                    .collect::<Vec<(i32, i32, CampaignMode, Difficulty, Time, i32)>>()
+                    .collect::<Vec<(GameId, i32, CampaignMode, Difficulty, Time, i32)>>()
                     .pipe(|runs| ServiceRecord::from_player_and_runs(&player, &runs))
             })
             .map_err(|err| eprintln!("{:?}", err))
@@ -60,7 +60,7 @@ impl ServiceRecordsDao {
     async fn find_by_player_and_game_id(
         &self,
         player: String,
-        game_id: i32,
+        game_id: GameId,
     ) -> Option<Vec<ServiceRecord>> {
         let game = self.games_dao.find_by_id(game_id)?;
         self.find_by_player_and_game(player, game).await
