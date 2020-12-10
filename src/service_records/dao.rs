@@ -7,7 +7,7 @@ use crate::difficulties::difficulty::Difficulty;
 use crate::error::Error;
 use crate::games::dao::GamesDao;
 use crate::games::game::Game;
-use crate::halo_waypoint::client::{Client, HyperClient, InMemoryCacheClient};
+use crate::halo_waypoint::client::{Client, InMemoryCacheClient};
 use crate::halo_waypoint::requests::auth::GetAuthRequest;
 use crate::halo_waypoint::requests::service_record::{
     GetServiceRecordRequest, GetServiceRecordResponse,
@@ -17,7 +17,7 @@ use crate::service_records::service_record::ServiceRecord;
 
 pub struct ServiceRecordsDao {
     games_dao: GamesDao,
-    halo_waypoint: InMemoryCacheClient<HyperClient>,
+    halo_waypoint: Box<dyn Client + Sync + Send>,
 }
 
 impl ServiceRecordsDao {
@@ -85,7 +85,7 @@ impl ServiceRecordsDao {
     pub fn default() -> Self {
         Self {
             games_dao: GamesDao::default(),
-            halo_waypoint: InMemoryCacheClient::default(),
+            halo_waypoint: Box::new(InMemoryCacheClient::default()),
         }
     }
 }
