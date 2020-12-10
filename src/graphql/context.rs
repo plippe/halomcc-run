@@ -1,16 +1,16 @@
-use crate::games::dao::GamesDao;
+use crate::games::dao::{GamesDao, InMemoryGamesDao};
 use crate::missions::dao::MissionsDao;
 use crate::service_records::dao::ServiceRecordsDao;
 
 pub struct Context {
-    games_dao: GamesDao,
+    games_dao: Box<dyn GamesDao + Send + Sync>,
     missions_dao: MissionsDao,
     service_records_doa: ServiceRecordsDao,
 }
 
 impl Context {
-    pub fn games_dao(&self) -> &GamesDao {
-        &self.games_dao
+    pub fn games_dao(&self) -> &(dyn GamesDao + Send + Sync) {
+        &*self.games_dao
     }
 
     pub fn missions_dao(&self) -> &MissionsDao {
@@ -23,7 +23,7 @@ impl Context {
 
     pub fn default() -> Self {
         Self {
-            games_dao: GamesDao::default(),
+            games_dao: Box::new(InMemoryGamesDao::default()),
             missions_dao: MissionsDao::default(),
             service_records_doa: ServiceRecordsDao::default(),
         }

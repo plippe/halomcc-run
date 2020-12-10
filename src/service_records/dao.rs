@@ -5,7 +5,7 @@ use crate::campaign_modes::campaign_mode::CampaignMode;
 use crate::chainable::Chainable;
 use crate::difficulties::difficulty::Difficulty;
 use crate::error::Error;
-use crate::games::dao::GamesDao;
+use crate::games::dao::{GamesDao, InMemoryGamesDao};
 use crate::games::game::Game;
 use crate::halo_waypoint::client::{Client, InMemoryCacheClient};
 use crate::halo_waypoint::requests::auth::GetAuthRequest;
@@ -16,8 +16,8 @@ use crate::missions::mission::Mission;
 use crate::service_records::service_record::ServiceRecord;
 
 pub struct ServiceRecordsDao {
-    games_dao: GamesDao,
-    halo_waypoint: Box<dyn Client + Sync + Send>,
+    games_dao: Box<dyn GamesDao + Send + Sync>,
+    halo_waypoint: Box<dyn Client + Send + Sync>,
 }
 
 impl ServiceRecordsDao {
@@ -84,7 +84,7 @@ impl ServiceRecordsDao {
 
     pub fn default() -> Self {
         Self {
-            games_dao: GamesDao::default(),
+            games_dao: Box::new(InMemoryGamesDao::default()),
             halo_waypoint: Box::new(InMemoryCacheClient::default()),
         }
     }
