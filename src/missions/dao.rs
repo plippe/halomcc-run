@@ -3,9 +3,17 @@ use time::time;
 
 use crate::missions::mission::Mission;
 
-pub struct MissionsDao;
-impl MissionsDao {
-    pub fn all(&self) -> Vec<Mission> {
+pub trait MissionsDao {
+    fn all_by_game_id(&self, game_id: i32) -> Vec<Mission>;
+    fn find_by_game_id_and_id(&self, game_id: i32, id: i32) -> Option<Mission>;
+}
+
+pub struct InMemoryMissionsDao {
+    missions: Vec<Mission>,
+}
+
+impl InMemoryMissionsDao {
+    pub fn default() -> Self {
         #[rustfmt::skip]
         let halo = vec![
             Mission::new(1, 1, "Pillar of Autumn", Some(time!(00:15:00)), Some(17_000)),
@@ -99,25 +107,27 @@ impl MissionsDao {
             Mission::new(6, 10, "Epilogue", None, None),
         ];
 
-        vec![halo, halo_2, halo_3, halo_3_odst, halo_reach, halo_4]
+        let missions = vec![halo, halo_2, halo_3, halo_3_odst, halo_reach, halo_4]
             .into_iter()
-            .concat()
-    }
+            .concat();
 
-    pub fn all_by_game_id(&self, game_id: i32) -> Vec<Mission> {
-        self.all()
-            .into_iter()
+        Self { missions }
+    }
+}
+
+impl MissionsDao for InMemoryMissionsDao {
+    fn all_by_game_id(&self, game_id: i32) -> Vec<Mission> {
+        self.missions
+            .iter()
             .filter(|mission| mission.game_id() == game_id)
+            .cloned()
             .collect()
     }
 
-    pub fn find_by_game_id_and_id(&self, game_id: i32, id: i32) -> Option<Mission> {
-        self.all()
-            .into_iter()
+    fn find_by_game_id_and_id(&self, game_id: i32, id: i32) -> Option<Mission> {
+        self.missions
+            .iter()
             .find(|mission| mission.game_id() == game_id && mission.id() == id)
-    }
-
-    pub fn default() -> Self {
-        Self
+            .cloned()
     }
 }
