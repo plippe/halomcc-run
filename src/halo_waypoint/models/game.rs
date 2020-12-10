@@ -4,6 +4,7 @@ use std::result::Result;
 use crate::chainable::Chainable;
 use crate::error::{Error, HaloWaypointError};
 use crate::games::game::Game as InternalGame;
+use crate::games::game::GameId;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub enum Game {
@@ -62,7 +63,7 @@ impl Game {
     }
 
     pub fn from_internal(game: &InternalGame) -> Self {
-        match game.id() {
+        match game.id().value() {
             1 => Self::Halo,
             2 => Self::Halo2,
             3 => Self::Halo3,
@@ -73,14 +74,14 @@ impl Game {
         }
     }
 
-    pub fn to_internal(&self) -> i32 {
+    pub fn to_internal(&self) -> GameId {
         match self {
-            Self::Halo => 1,
-            Self::Halo2 => 2,
-            Self::Halo3 => 3,
-            Self::Halo3Odst => 4,
-            Self::HaloReach => 5,
-            Self::Halo4 => 6,
+            Self::Halo => GameId::new(1),
+            Self::Halo2 => GameId::new(2),
+            Self::Halo3 => GameId::new(3),
+            Self::Halo3Odst => GameId::new(4),
+            Self::HaloReach => GameId::new(5),
+            Self::Halo4 => GameId::new(6),
         }
     }
 }

@@ -1,8 +1,10 @@
 use time::Time;
 
+use crate::games::game::GameId;
+
 #[derive(Clone)]
 pub struct Mission {
-    game_id: i32,
+    game_id: GameId,
     id: i32,
     name: String,
     par_time: Option<Time>,
@@ -11,7 +13,7 @@ pub struct Mission {
 
 impl Mission {
     pub fn new(
-        game_id: i32,
+        game_id: GameId,
         id: i32,
         name: &str,
         par_time: Option<Time>,
@@ -26,7 +28,7 @@ impl Mission {
         }
     }
 
-    pub fn game_id(&self) -> i32 {
+    pub fn game_id(&self) -> GameId {
         self.game_id
     }
 
