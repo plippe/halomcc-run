@@ -2,6 +2,7 @@ use scraper::ElementRef;
 use std::result::Result;
 
 use crate::error::{Error, HaloWaypointError};
+use crate::missions::mission::MissionId as InternalMissionId;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub struct MissionId(i32);
@@ -25,8 +26,8 @@ impl MissionId {
             .map_err(Error::HaloWaypoint)
     }
 
-    pub fn to_internal(&self) -> i32 {
-        match self.0 {
+    pub fn to_internal(&self) -> InternalMissionId {
+        let id = match self.0 {
             0..=9 => self.0 + 1,
             31..=43 => self.0 - 28,
             70..=78 => self.0 - 68,
@@ -34,6 +35,8 @@ impl MissionId {
             178..=189 => self.0 - 177,
             104..=111 => self.0 - 102,
             other => unreachable!("External mission id shouldn't exist: {}", other),
-        }
+        };
+
+        InternalMissionId::new(id)
     }
 }

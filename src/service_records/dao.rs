@@ -12,7 +12,7 @@ use crate::halo_waypoint::requests::auth::GetAuthRequest;
 use crate::halo_waypoint::requests::service_record::{
     GetServiceRecordRequest, GetServiceRecordResponse,
 };
-use crate::missions::mission::Mission;
+use crate::missions::mission::{Mission, MissionId};
 use crate::service_records::service_record::ServiceRecord;
 
 pub struct ServiceRecordsDao {
@@ -50,7 +50,7 @@ impl ServiceRecordsDao {
             .map(|res| {
                 res.iter()
                     .flat_map(GetServiceRecordResponse::to_internal)
-                    .collect::<Vec<(GameId, i32, CampaignMode, Difficulty, Time, i32)>>()
+                    .collect::<Vec<(GameId, MissionId, CampaignMode, Difficulty, Time, i32)>>()
                     .pipe(|runs| ServiceRecord::from_player_and_runs(&player, &runs))
             })
             .map_err(|err| eprintln!("{:?}", err))
