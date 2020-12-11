@@ -1,14 +1,33 @@
-use juniper::graphql_object;
+use juniper::{graphql_object, ParseScalarResult, Value};
 
 use crate::graphql::context::Context;
 use crate::graphql::models::time::Time;
-use crate::missions::mission::Mission;
+use crate::missions::mission::{Mission, MissionId};
 use crate::service_records::service_record::ServiceRecord;
+
+#[juniper::graphql_scalar(description = "Mission id")]
+impl<S> GraphQLScalar for MissionId
+where
+    S: ScalarValue,
+{
+    // Define how to convert your custom scalar into a primitive type.
+    fn resolve(&self) -> Value {
+        Value::scalar(*self.value())
+    }
+
+    fn from_input_value(_v: &InputValue) -> Option<Self> {
+        unimplemented!();
+    }
+
+    fn from_str<'a>(_value: ScalarToken<'a>) -> ParseScalarResult<'a, S> {
+        unimplemented!();
+    }
+}
 
 #[graphql_object(Context = Context)]
 impl Mission {
-    fn id(&self) -> i32 {
-        *self.id().value()
+    fn id(&self) -> MissionId {
+        self.id()
     }
 
     fn name(&self) -> String {
