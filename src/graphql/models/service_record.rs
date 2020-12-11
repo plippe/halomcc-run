@@ -23,7 +23,7 @@ impl ServiceRecord {
     }
 
     fn mission_id(&self) -> i32 {
-        self.mission_id()
+        *self.mission_id().value()
     }
 
     fn mission(&self, context: &Context) -> Option<Mission> {

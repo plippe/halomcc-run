@@ -1,11 +1,37 @@
+use std::cmp::Ordering;
 use time::Time;
 
 use crate::games::game::GameId;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MissionId(i32);
+
+impl MissionId {
+    pub fn new(id: i32) -> Self {
+        Self(id)
+    }
+
+    pub fn value(&self) -> &i32 {
+        &self.0
+    }
+}
+
+impl Ord for MissionId {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.value().cmp(other.value())
+    }
+}
+
+impl PartialOrd for MissionId {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 #[derive(Clone)]
 pub struct Mission {
     game_id: GameId,
-    id: i32,
+    id: MissionId,
     name: String,
     par_time: Option<Time>,
     par_score: Option<i32>,
@@ -14,7 +40,7 @@ pub struct Mission {
 impl Mission {
     pub fn new(
         game_id: GameId,
-        id: i32,
+        id: MissionId,
         name: &str,
         par_time: Option<Time>,
         par_score: Option<i32>,
@@ -32,7 +58,7 @@ impl Mission {
         self.game_id
     }
 
-    pub fn id(&self) -> i32 {
+    pub fn id(&self) -> MissionId {
         self.id
     }
 

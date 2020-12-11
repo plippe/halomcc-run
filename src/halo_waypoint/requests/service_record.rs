@@ -20,6 +20,7 @@ use crate::halo_waypoint::models::game::Game;
 use crate::halo_waypoint::models::highest_score::HighestScore;
 use crate::halo_waypoint::models::mission_id::MissionId;
 use crate::halo_waypoint::requests::auth::GetAuthResponse;
+use crate::missions::mission::MissionId as InternalMissionId;
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct GetServiceRecordRequest {
@@ -173,8 +174,8 @@ impl GetServiceRecordResponse {
     pub fn to_internal(
         &self,
     ) -> Vec<(
-        GameId,
-        i32,
+        InternalGameId,
+        InternalMissionId,
         InternalCampaignMode,
         InternalDifficulty,
         Time,

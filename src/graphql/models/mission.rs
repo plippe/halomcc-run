@@ -8,7 +8,7 @@ use crate::service_records::service_record::ServiceRecord;
 #[graphql_object(Context = Context)]
 impl Mission {
     fn id(&self) -> i32 {
-        self.id()
+        *self.id().value()
     }
 
     fn name(&self) -> String {
