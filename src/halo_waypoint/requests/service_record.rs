@@ -12,7 +12,7 @@ use crate::chainable::Chainable;
 use crate::difficulties::difficulty::Difficulty as InternalDifficulty;
 use crate::error::{Error, HaloWaypointError};
 use crate::games::game::Game as InternalGame;
-use crate::games::game::GameId;
+use crate::games::game::GameId as InternalGameId;
 use crate::halo_waypoint::models::campaign_mode::CampaignMode;
 use crate::halo_waypoint::models::difficulty::Difficulty;
 use crate::halo_waypoint::models::fastest_time::FastestTime;
