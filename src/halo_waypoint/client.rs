@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use http::header::HeaderValue;
 use http::{header, Request, Response};
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryFrom;
 use std::hash::Hash;
 use std::sync::RwLock;
 use std::time::Duration;
@@ -33,10 +33,10 @@ pub struct HyperClient {
 impl HyperClient {
     async fn request<Req, Res>(&self, req: Req) -> Result<Res, Error>
     where
-        Req: Into<Request<hyper::body::Body>> + Send,
+        Request<hyper::body::Body>: From<Req>,
         Res: TryFrom<Response<String>, Error = Error>,
     {
-        let mut req = req.into();
+        let mut req = Request::<hyper::body::Body>::from(req);
         req.headers_mut().append(
             header::USER_AGENT,
             HeaderValue::from_static("halomcc.run/0.1"),
@@ -58,7 +58,7 @@ impl HyperClient {
             .pipe(String::from_utf8)
             .unwrap();
 
-        res_without_body.body(body).unwrap().try_into()
+        Res::try_from(res_without_body.body(body).unwrap())
     }
 
     fn default() -> Self {

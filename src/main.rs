@@ -22,7 +22,7 @@ fn addr() -> SocketAddr {
         .map(|it| it.parse().unwrap())
         .unwrap_or(3000);
 
-    (ip, port).into()
+    SocketAddr::from((ip, port))
 }
 
 #[derive(Clone)]
